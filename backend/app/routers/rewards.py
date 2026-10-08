@@ -301,12 +301,31 @@ def archive_reward(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> RewardOut:
+    del user  # any authenticated couple member; row already scoped
     row = _get_reward_or_404(db, reward_id)
-    if row.creator_user_id != user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your reward")
     if row.status != "listed":
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Reward not listed")
     row.status = "archived"
+    _sync_active(row)
+    db.commit()
+    db.refresh(row)
+    return _reward_to_out(row, reveal=True)
+
+
+@router.post("/{reward_id}/relist")
+def relist_reward(
+    reward_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RewardOut:
+    del user
+    row = _get_reward_or_404(db, reward_id)
+    if row.status != "archived":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Reward not archived")
+    row.status = "listed"
+    row.reject_reason = None
+    row.reviewed_by = None
+    row.reviewed_at = None
     _sync_active(row)
     db.commit()
     db.refresh(row)

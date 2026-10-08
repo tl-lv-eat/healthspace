@@ -275,3 +275,37 @@ def test_partner_can_patch_archived_price(client, auth_header, partner_header):
     assert p.status_code == 200
     assert p.json()["points_price"] == 40
     assert p.json()["status"] == "archived"
+
+
+def test_partner_can_archive_and_relist(client, auth_header, partner_header, db_session):
+    from backend.app.services.points import grant
+
+    rw = _create_reward(client, auth_header, title="货架", points_price=20)
+    _approve(client, partner_header, rw["id"])
+
+    ar = client.post(f"/api/rewards/{rw['id']}/archive", headers=partner_header)
+    assert ar.status_code == 200
+    assert ar.json()["status"] == "archived"
+    assert ar.json()["active"] is False
+
+    mall = client.get("/api/rewards", headers=auth_header).json()
+    assert not any(x["id"] == rw["id"] for x in mall)
+
+    rel = client.post(f"/api/rewards/{rw['id']}/relist", headers=partner_header)
+    assert rel.status_code == 200
+    assert rel.json()["status"] == "listed"
+    assert rel.json()["active"] is True
+
+    mall2 = client.get("/api/rewards", headers=auth_header).json()
+    assert any(x["id"] == rw["id"] for x in mall2)
+
+    grant(db_session, "dragon", 20, "test", "dragon:test:relist-redeem")
+    red = client.post(f"/api/rewards/{rw['id']}/redeem", headers=auth_header)
+    assert red.status_code == 200
+
+
+def test_relist_rejects_non_archived(client, auth_header, partner_header):
+    rw = _create_reward(client, auth_header, title="未下架")
+    _approve(client, partner_header, rw["id"])
+    bad = client.post(f"/api/rewards/{rw['id']}/relist", headers=auth_header)
+    assert bad.status_code == 400
