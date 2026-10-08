@@ -107,9 +107,8 @@ async function onFileSelected(ev: Event) {
     }
   } catch {
     closeToast()
-    showFailToast('上传或估卡失败')
-    composeVisible.value = false
-    resetCompose()
+    estimateFailed.value = true
+    showFailToast('上传或估卡失败，请手填热量')
   }
 }
 
