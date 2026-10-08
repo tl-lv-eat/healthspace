@@ -1,5 +1,6 @@
 import { http } from '@/api/http'
 import type { Meal } from '@/api/meals'
+import type { Workout } from '@/api/workouts'
 
 export interface DoneFlags {
   meal: boolean
@@ -17,7 +18,7 @@ export interface TodayMe {
   user_id: string
   meals: Meal[]
   water: TodayWaterSummary
-  workouts: unknown[]
+  workouts: Workout[]
   done: DoneFlags
 }
 

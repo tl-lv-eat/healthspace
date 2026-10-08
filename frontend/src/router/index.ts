@@ -15,6 +15,11 @@ const router = createRouter({
       name: 'today',
       component: () => import('@/views/TodayView.vue'),
     },
+    {
+      path: '/workout',
+      name: 'workout',
+      component: () => import('@/views/WorkoutView.vue'),
+    },
     { path: '/', redirect: '/today' },
   ],
 })
