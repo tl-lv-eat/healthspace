@@ -49,8 +49,7 @@ const router = createRouter({
         {
           path: 'goals',
           name: 'goals',
-          component: () => import('@/views/PlaceholderTabView.vue'),
-          props: { phase: 'P2', title: '目标' },
+          component: () => import('@/views/GoalsView.vue'),
         },
         {
           path: 'mine',

@@ -11,6 +11,10 @@ app:
   jwt_expire_hours: 720
   database_url: sqlite:///./data/jianfei.db
   upload_dir: uploads/meals
+  points:
+    daily_all_three: 10
+    weekly_plan_complete: 50
+    goal_complete: 20
   users:
     - id: dragon
       password: dragon-pass
