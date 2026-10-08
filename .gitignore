@@ -1,0 +1,10 @@
+uploads/
+*.db
+.env
+config.yaml
+frontend/node_modules/
+frontend/dist/
+__pycache__/
+config.local.yaml
+.pytest_cache/
+*.pyc
