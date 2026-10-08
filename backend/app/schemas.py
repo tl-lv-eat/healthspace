@@ -84,3 +84,51 @@ class WaterDayOut(BaseModel):
     target_ml: int
     total_ml: int
     entries: list[WaterEntryOut]
+
+
+class WorkoutSetIn(BaseModel):
+    reps: int
+    weight: float | None = None
+
+
+class WorkoutCreate(BaseModel):
+    date: str
+    kind: str
+    cardio_type: str | None = None
+    duration_min: int | None = None
+    intensity: str | None = None
+    body_part: str | None = None
+    exercise_id: int | None = None
+    exercise_name: str | None = None
+    sets: list[WorkoutSetIn] | None = None
+
+
+class WorkoutOut(BaseModel):
+    id: int
+    user_id: str
+    date: str
+    kind: str
+    payload: dict
+    created_at: str
+
+
+class ExerciseCreate(BaseModel):
+    name_zh: str
+    name_en: str = ""
+    body_part: str
+    instructions_zh: str = ""
+    gif_url: str = ""
+
+
+class ExerciseOut(BaseModel):
+    id: int
+    slug: str
+    name_zh: str
+    name_en: str
+    body_part: str
+    gif_url: str
+    instructions_zh: str
+    is_custom: bool
+    owner_user_id: str | None
+
+    model_config = {"from_attributes": True}

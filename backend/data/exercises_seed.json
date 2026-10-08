@@ -1,0 +1,242 @@
+[
+  {
+    "slug": "barbell-bench-press",
+    "name_zh": "杠铃卧推",
+    "name_en": "Barbell Bench Press",
+    "body_part": "chest",
+    "muscle": "pectorals",
+    "instructions_zh": "肩胛收紧，杠铃触胸后推起。"
+  },
+  {
+    "slug": "dumbbell-bench-press",
+    "name_zh": "哑铃卧推",
+    "name_en": "Dumbbell Bench Press",
+    "body_part": "chest",
+    "muscle": "pectorals",
+    "instructions_zh": "哑铃下放至胸侧，推起时勿碰撞。"
+  },
+  {
+    "slug": "incline-dumbbell-press",
+    "name_zh": "上斜哑铃卧推",
+    "name_en": "Incline Dumbbell Press",
+    "body_part": "chest",
+    "muscle": "pectorals",
+    "instructions_zh": "上斜凳约30–45°，侧重上胸。"
+  },
+  {
+    "slug": "dumbbell-fly",
+    "name_zh": "哑铃飞鸟",
+    "name_en": "Dumbbell Fly",
+    "body_part": "chest",
+    "muscle": "pectorals",
+    "instructions_zh": "肘微屈，弧形合拢，感受胸肌拉伸。"
+  },
+  {
+    "slug": "cable-crossover",
+    "name_zh": "龙门架夹胸",
+    "name_en": "Cable Crossover",
+    "body_part": "chest",
+    "muscle": "pectorals",
+    "instructions_zh": "身体略前倾，双手在胸前交汇。"
+  },
+  {
+    "slug": "archer-push-up",
+    "name_zh": "弓箭手俯卧撑",
+    "name_en": "Archer Push Up",
+    "body_part": "chest",
+    "muscle": "pectorals",
+    "instructions_zh": "重心偏向一侧，对侧手臂伸直。"
+  },
+  {
+    "slug": "pull-up",
+    "name_zh": "引体向上",
+    "name_en": "Pull Up",
+    "body_part": "back",
+    "muscle": "lats",
+    "instructions_zh": "宽握上拉至下巴过杠，控制下放。"
+  },
+  {
+    "slug": "chin-up",
+    "name_zh": "反手引体",
+    "name_en": "Chin Up",
+    "body_part": "back",
+    "muscle": "lats",
+    "instructions_zh": "窄握反握，侧重背阔与肱二头。"
+  },
+  {
+    "slug": "lat-pulldown",
+    "name_zh": "高位下拉",
+    "name_en": "Lat Pulldown",
+    "body_part": "back",
+    "muscle": "lats",
+    "instructions_zh": "挺胸沉肩，将横杠拉至锁骨附近。"
+  },
+  {
+    "slug": "alternate-lateral-pulldown",
+    "name_zh": "交替宽握下拉",
+    "name_en": "Alternate Lateral Pulldown",
+    "body_part": "back",
+    "muscle": "lats",
+    "instructions_zh": "交替下拉，保持核心稳定。"
+  },
+  {
+    "slug": "barbell-bent-over-row",
+    "name_zh": "杠铃俯身划船",
+    "name_en": "Barbell Bent Over Row",
+    "body_part": "back",
+    "muscle": "lats",
+    "instructions_zh": "髋铰链俯身，将杠铃拉向腹部。"
+  },
+  {
+    "slug": "dumbbell-single-arm-row",
+    "name_zh": "单臂哑铃划船",
+    "name_en": "Dumbbell Single Arm Row",
+    "body_part": "back",
+    "muscle": "lats",
+    "instructions_zh": "一手扶凳，将哑铃拉向髋部。"
+  },
+  {
+    "slug": "seated-cable-row",
+    "name_zh": "坐姿划船",
+    "name_en": "Seated Cable Row",
+    "body_part": "back",
+    "muscle": "lats",
+    "instructions_zh": "坐直后拉，肩胛后缩夹紧。"
+  },
+  {
+    "slug": "overhead-press",
+    "name_zh": "站姿推举",
+    "name_en": "Overhead Press",
+    "body_part": "shoulders",
+    "muscle": "delts",
+    "instructions_zh": "杠铃从锁骨推至头顶，核心收紧。"
+  },
+  {
+    "slug": "dumbbell-shoulder-press",
+    "name_zh": "哑铃肩推",
+    "name_en": "Dumbbell Shoulder Press",
+    "body_part": "shoulders",
+    "muscle": "delts",
+    "instructions_zh": "哑铃推至手臂接近伸直，勿耸肩。"
+  },
+  {
+    "slug": "lateral-raise",
+    "name_zh": "侧平举",
+    "name_en": "Lateral Raise",
+    "body_part": "shoulders",
+    "muscle": "delts",
+    "instructions_zh": "肘微屈，抬至肩高，缓慢下放。"
+  },
+  {
+    "slug": "band-reverse-fly",
+    "name_zh": "弹力带反向飞鸟",
+    "name_en": "Band Reverse Fly",
+    "body_part": "shoulders",
+    "muscle": "delts",
+    "instructions_zh": "俯身或站姿，向后打开双臂。"
+  },
+  {
+    "slug": "barbell-full-squat",
+    "name_zh": "杠铃深蹲",
+    "name_en": "Barbell Full Squat",
+    "body_part": "legs",
+    "muscle": "quads",
+    "instructions_zh": "杠铃置于斜方肌，蹲至大腿至少平行。"
+  },
+  {
+    "slug": "barbell-front-squat",
+    "name_zh": "杠铃前蹲",
+    "name_en": "Barbell Front Squat",
+    "body_part": "legs",
+    "muscle": "quads",
+    "instructions_zh": "杠铃架于前肩，躯干更直立。"
+  },
+  {
+    "slug": "leg-press",
+    "name_zh": "腿举",
+    "name_en": "Leg Press",
+    "body_part": "legs",
+    "muscle": "quads",
+    "instructions_zh": "脚位适中，膝与脚尖方向一致。"
+  },
+  {
+    "slug": "dumbbell-lunge",
+    "name_zh": "哑铃弓步",
+    "name_en": "Dumbbell Lunge",
+    "body_part": "legs",
+    "muscle": "quads",
+    "instructions_zh": "步幅适中，后膝接近触地。"
+  },
+  {
+    "slug": "barbell-deadlift",
+    "name_zh": "杠铃硬拉",
+    "name_en": "Barbell Deadlift",
+    "body_part": "legs",
+    "muscle": "hamstrings",
+    "instructions_zh": "髋铰链起杠，背中立，杠贴近小腿。"
+  },
+  {
+    "slug": "romanian-deadlift",
+    "name_zh": "罗马尼亚硬拉",
+    "name_en": "Romanian Deadlift",
+    "body_part": "legs",
+    "muscle": "hamstrings",
+    "instructions_zh": "膝微屈，髋向后推，感受腘绳肌拉伸。"
+  },
+  {
+    "slug": "hip-thrust",
+    "name_zh": "臀推",
+    "name_en": "Hip Thrust",
+    "body_part": "legs",
+    "muscle": "glutes",
+    "instructions_zh": "上背靠凳，顶髋至身体成直线。"
+  },
+  {
+    "slug": "barbell-curl",
+    "name_zh": "杠铃弯举",
+    "name_en": "Barbell Curl",
+    "body_part": "arms",
+    "muscle": "biceps",
+    "instructions_zh": "肘贴身体，弯举至肩前，控制下放。"
+  },
+  {
+    "slug": "dumbbell-hammer-curl",
+    "name_zh": "锤式弯举",
+    "name_en": "Dumbbell Hammer Curl",
+    "body_part": "arms",
+    "muscle": "biceps",
+    "instructions_zh": "中性握距，侧重肱肌与前臂。"
+  },
+  {
+    "slug": "triceps-pushdown",
+    "name_zh": "绳索下压",
+    "name_en": "Triceps Pushdown",
+    "body_part": "arms",
+    "muscle": "triceps",
+    "instructions_zh": "大臂固定，将绳索压至完全伸直。"
+  },
+  {
+    "slug": "crunch",
+    "name_zh": "卷腹",
+    "name_en": "Crunch",
+    "body_part": "core",
+    "muscle": "abs",
+    "instructions_zh": "下背贴地，上背离地，勿拉颈。"
+  },
+  {
+    "slug": "hanging-leg-raise",
+    "name_zh": "悬垂举腿",
+    "name_en": "Hanging Leg Raise",
+    "body_part": "core",
+    "muscle": "abs",
+    "instructions_zh": "悬挂抬腿至水平或更高，避免摆动。"
+  },
+  {
+    "slug": "plank",
+    "name_zh": "平板支撑",
+    "name_en": "Plank",
+    "body_part": "core",
+    "muscle": "abs",
+    "instructions_zh": "肘在肩下，身体成一直线，收紧核心。"
+  }
+]
