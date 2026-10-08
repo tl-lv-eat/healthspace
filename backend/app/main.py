@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -11,9 +12,12 @@ from backend.app.db import init_db
 from backend.app.routers import auth as auth_router
 from backend.app.routers import body as body_router
 from backend.app.routers import calendar as calendar_router
+from backend.app.routers import chat as chat_router
 from backend.app.routers import exercises as exercises_router
 from backend.app.routers import goals as goals_router
 from backend.app.routers import journal as journal_router
+from backend.app.routers import push as push_router
+from backend.app.routers import reports as reports_router
 from backend.app.routers import rewards as rewards_router
 from backend.app.routers import meals as meals_router
 from backend.app.routers import water as water_router
@@ -21,8 +25,20 @@ from backend.app.routers import today as today_router
 from backend.app.routers import points as points_router
 from backend.app.routers import week_plans as week_plans_router
 from backend.app.routers import workouts as workouts_router
+from backend.app.scheduler import start_scheduler
 
-app = FastAPI(title="双人减")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    sched = start_scheduler()
+    app.state.scheduler = sched
+    yield
+    if sched is not None:
+        sched.shutdown(wait=False)
+
+
+app = FastAPI(title="双人减", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -42,11 +58,9 @@ app.include_router(journal_router.router, prefix="/api/journal", tags=["journal"
 app.include_router(points_router.router, prefix="/api/points", tags=["points"])
 app.include_router(goals_router.router, prefix="/api/goals", tags=["goals"])
 app.include_router(rewards_router.router, prefix="/api/rewards", tags=["rewards"])
-
-
-@app.on_event("startup")
-def on_startup() -> None:
-    init_db()
+app.include_router(reports_router.router, prefix="/api/reports", tags=["reports"])
+app.include_router(chat_router.router, prefix="/api/chat", tags=["chat"])
+app.include_router(push_router.router, prefix="/api/push", tags=["push"])
 
 
 _frontend_dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"

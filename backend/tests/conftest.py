@@ -40,6 +40,7 @@ def client(tmp_path) -> Generator[TestClient, None, None]:
     os.environ["DATABASE_URL"] = f"sqlite:///{db_file.as_posix()}"
     os.environ["JIANFEI_CONFIG"] = str(config_file)
     os.environ["UPLOAD_DIR"] = str(upload_dir)
+    os.environ["DISABLE_SCHEDULER"] = "1"
     clear_settings_cache()
 
     from backend.app.db import init_db, rebind_engine
@@ -67,6 +68,7 @@ def client(tmp_path) -> Generator[TestClient, None, None]:
             os.environ.pop("UPLOAD_DIR", None)
         else:
             os.environ["UPLOAD_DIR"] = prior_upload
+        os.environ.pop("DISABLE_SCHEDULER", None)
         clear_settings_cache()
 
 

@@ -25,6 +25,15 @@ class PointsConfig(BaseModel):
     goal_complete: int = 20
 
 
+class ScheduleConfig(BaseModel):
+    daily_report_hour: int = 22
+    daily_report_minute: int = 0
+    weekly_report_weekday: int = 0
+    weekly_report_hour: int = 0
+    weekly_report_minute: int = 30
+    reminder_hours: list[int] = Field(default_factory=lambda: [12, 21])
+
+
 class Settings(BaseModel):
     database_url: str = "sqlite:///./data/jianfei.db"
     jwt_secret: str = "change-me-in-production"
@@ -32,6 +41,7 @@ class Settings(BaseModel):
     upload_dir: str = "uploads/meals"
     users: list[UserConfig] = Field(default_factory=list)
     points: PointsConfig = Field(default_factory=PointsConfig)
+    schedule: ScheduleConfig = Field(default_factory=ScheduleConfig)
 
 
 def _config_path() -> Path:
@@ -88,6 +98,8 @@ def _build_settings() -> Settings:
     upload_dir = os.environ.get("UPLOAD_DIR") or app.get("upload_dir") or Settings.model_fields["upload_dir"].default
     points_raw = app.get("points") or {}
     points = PointsConfig.model_validate(points_raw) if points_raw else PointsConfig()
+    schedule_raw = app.get("schedule") or {}
+    schedule = ScheduleConfig.model_validate(schedule_raw) if schedule_raw else ScheduleConfig()
 
     return Settings(
         database_url=database_url,
@@ -96,6 +108,7 @@ def _build_settings() -> Settings:
         upload_dir=upload_dir,
         users=users,
         points=points,
+        schedule=schedule,
     )
 
 

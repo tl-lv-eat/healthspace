@@ -15,6 +15,13 @@ app:
     daily_all_three: 10
     weekly_plan_complete: 50
     goal_complete: 20
+  schedule:
+    daily_report_hour: 22
+    daily_report_minute: 0
+    weekly_report_weekday: 0
+    weekly_report_hour: 0
+    weekly_report_minute: 30
+    reminder_hours: [12, 21]
   users:
     - id: dragon
       password: dragon-pass
