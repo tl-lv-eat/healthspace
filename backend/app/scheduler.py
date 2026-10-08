@@ -8,12 +8,14 @@ from datetime import date, timedelta
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 
 from backend.app.db import SessionLocal
 from backend.app.services.daily_report import ReportError, generate_daily_report
 from backend.app.services.pushplus import run_reminders_now
 from backend.app.services.weekly_report import ReportError as WeeklyReportError
 from backend.app.services.weekly_report import generate_weekly_report
+from backend.app.services.scheduler import job_points_settlement
 from backend.app.settings import get_settings
 
 logger = logging.getLogger(__name__)
@@ -21,6 +23,7 @@ logger = logging.getLogger(__name__)
 JOB_DAILY = "job_daily_reports"
 JOB_WEEKLY = "job_weekly_reports"
 JOB_REMINDERS = "job_reminders"
+JOB_POINTS_SETTLEMENT = "job_points_settlement"
 
 _USER_IDS = ("dragon", "leaf")
 
@@ -88,6 +91,12 @@ def start_scheduler() -> BackgroundScheduler | None:
         job_reminders,
         CronTrigger(minute=0),
         id=JOB_REMINDERS,
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        job_points_settlement,
+        IntervalTrigger(seconds=60),
+        id=JOB_POINTS_SETTLEMENT,
         replace_existing=True,
     )
     scheduler.start()

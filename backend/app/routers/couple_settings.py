@@ -85,4 +85,6 @@ def settle_daily(
         settle_day = date.fromisoformat(day)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="invalid date") from exc
-    return settle_daily_for_date(db, settle_day)
+    result = settle_daily_for_date(db, settle_day)
+    db.commit()
+    return result

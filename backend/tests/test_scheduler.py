@@ -1,9 +1,15 @@
 import os
 
-from backend.app.scheduler import JOB_DAILY, JOB_REMINDERS, JOB_WEEKLY, start_scheduler
+from backend.app.scheduler import (
+    JOB_DAILY,
+    JOB_POINTS_SETTLEMENT,
+    JOB_REMINDERS,
+    JOB_WEEKLY,
+    start_scheduler,
+)
 
 
-def test_start_scheduler_registers_three_jobs(monkeypatch):
+def test_start_scheduler_registers_report_and_settlement_jobs(monkeypatch):
     monkeypatch.delenv("DISABLE_SCHEDULER", raising=False)
     started = []
 
@@ -22,5 +28,5 @@ def test_start_scheduler_registers_three_jobs(monkeypatch):
     sched = start_scheduler()
     assert sched is not None
     assert started
-    assert set(sched._jobs) == {JOB_DAILY, JOB_WEEKLY, JOB_REMINDERS}
+    assert set(sched._jobs) == {JOB_DAILY, JOB_WEEKLY, JOB_REMINDERS, JOB_POINTS_SETTLEMENT}
     os.environ["DISABLE_SCHEDULER"] = "1"
