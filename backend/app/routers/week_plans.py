@@ -2,6 +2,7 @@ from __future__ import annotations
 from calendar import monthrange
 from datetime import date, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from backend.app.auth import get_current_user
 from backend.app.db import get_db
@@ -334,7 +335,17 @@ def upsert_week_plan(
             plan = WeekPlan(user_id=owner_id, week_start=start_s)
             db.add(plan)
     _apply_upsert_fields(plan, body, start_s=start_s, end_s=end_s)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"A plan for this user already exists with week_start {start_s}. "
+                "Choose a different start date or edit that plan."
+            ),
+        ) from exc
     db.refresh(plan)
     return _plan_to_out(
         plan, owner, start=plan.week_start, end=plan.end_date or plan.week_start

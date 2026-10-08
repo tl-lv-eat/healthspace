@@ -11,6 +11,7 @@ import {
 } from '@/api/calendar'
 import { listWeekPlans, type WeekPlan } from '@/api/weekPlans'
 import { PERSONAS, type PersonaId } from '@/constants/personas'
+import { formatDateLocal } from '@/api/today'
 
 const router = useRouter()
 const now = new Date()
@@ -27,7 +28,7 @@ const initialTargetUserId = ref<PersonaId | undefined>(undefined)
 const dayMap = computed(() => new Map(days.value.map((d) => [d.date, d])))
 
 function todayIso() {
-  return new Date().toISOString().slice(0, 10)
+  return formatDateLocal()
 }
 
 function padMonth(y: number, m: number) {
@@ -37,16 +38,15 @@ function padMonth(y: number, m: number) {
   const startPad = first.getDay() === 0 ? 6 : first.getDay() - 1
   for (let i = startPad; i > 0; i--) {
     const d = new Date(y, m - 1, 1 - i)
-    cells.push({ date: d.toISOString().slice(0, 10), inMonth: false })
+    cells.push({ date: formatDateLocal(d), inMonth: false })
   }
   for (let d = 1; d <= last.getDate(); d++) {
-    const iso = new Date(y, m - 1, d).toISOString().slice(0, 10)
-    cells.push({ date: iso, inMonth: true })
+    cells.push({ date: formatDateLocal(new Date(y, m - 1, d)), inMonth: true })
   }
   while (cells.length % 7 !== 0) {
     const extra = cells.length - startPad - last.getDate() + 1
     const d = new Date(y, m - 1, last.getDate() + extra)
-    cells.push({ date: d.toISOString().slice(0, 10), inMonth: false })
+    cells.push({ date: formatDateLocal(d), inMonth: false })
   }
   return cells
 }

@@ -132,6 +132,95 @@ def test_put_plan_by_id_rejects_wrong_target_user(client, leaf_auth_header):
     assert hijack.status_code == 404
 
 
+def test_overlapping_plans_newer_start_wins(client, auth_header):
+    older = client.put(
+        "/api/week-plans",
+        headers=auth_header,
+        json={
+            "start_date": "2026-11-01",
+            "end_date": "2026-11-14",
+            "water_target_ml": 2000,
+            "weekly_kcal_deficit": 3000,
+            "weekly_workout_sessions": 2,
+            "meal_mode": "three_main",
+            "workout_mode": "any",
+        },
+    )
+    assert older.status_code == 200
+    assert older.json()["water_target_ml"] == 2000
+
+    newer = client.put(
+        "/api/week-plans",
+        headers=auth_header,
+        json={
+            "start_date": "2026-11-08",
+            "end_date": "2026-11-20",
+            "water_target_ml": 2600,
+            "weekly_kcal_deficit": 4000,
+            "weekly_workout_sessions": 4,
+            "meal_mode": "three_main",
+            "workout_mode": "any",
+        },
+    )
+    assert newer.status_code == 200
+
+    mid = client.get(
+        "/api/week-plans", headers=auth_header, params={"on": "2026-11-10"}
+    )
+    assert mid.status_code == 200
+    assert mid.json()["start_date"] == "2026-11-08"
+    assert mid.json()["water_target_ml"] == 2600
+
+
+def test_put_plan_week_start_collision(client, auth_header):
+    first = client.put(
+        "/api/week-plans",
+        headers=auth_header,
+        json={
+            "start_date": "2026-07-01",
+            "end_date": "2026-07-07",
+            "water_target_ml": 2000,
+            "weekly_kcal_deficit": 3500,
+            "weekly_workout_sessions": 3,
+            "meal_mode": "three_main",
+            "workout_mode": "any",
+        },
+    )
+    second = client.put(
+        "/api/week-plans",
+        headers=auth_header,
+        json={
+            "start_date": "2026-07-08",
+            "end_date": "2026-07-14",
+            "water_target_ml": 2100,
+            "weekly_kcal_deficit": 3500,
+            "weekly_workout_sessions": 3,
+            "meal_mode": "three_main",
+            "workout_mode": "any",
+        },
+    )
+    assert first.status_code == 200
+    assert second.status_code == 200
+    plan_id = second.json()["id"]
+
+    clash = client.put(
+        "/api/week-plans",
+        headers=auth_header,
+        json={
+            "id": plan_id,
+            "start_date": "2026-07-01",
+            "end_date": "2026-07-14",
+            "water_target_ml": 9999,
+            "weekly_kcal_deficit": 3500,
+            "weekly_workout_sessions": 3,
+            "meal_mode": "three_main",
+            "workout_mode": "any",
+        },
+    )
+    assert clash.status_code == 409
+    assert "week_start" in clash.json()["detail"].lower()
+
+
 def test_week_plan_delete(client, auth_header):
     r = client.put(
         "/api/week-plans",
