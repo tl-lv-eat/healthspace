@@ -2,7 +2,7 @@ import { http } from '@/api/http'
 
 export type RewardCategory = 'food' | 'fun' | 'intimacy' | 'adult'
 export type RewardStatus = 'pending_review' | 'listed' | 'rejected' | 'archived'
-export type RewardListScope = 'listed' | 'pending_review_for_me' | 'mine'
+export type RewardListScope = 'listed' | 'pending_review_for_me' | 'mine' | 'catalog'
 
 export const REWARD_CATEGORY_OPTIONS: { value: RewardCategory; label: string }[] = [
   { value: 'food', label: '饮食奖励' },
@@ -101,6 +101,11 @@ export async function resubmitReward(id: number): Promise<Reward> {
 
 export async function archiveReward(id: number): Promise<Reward> {
   const { data } = await http.post<Reward>(`/rewards/${id}/archive`)
+  return data
+}
+
+export async function relistReward(id: number): Promise<Reward> {
+  const { data } = await http.post<Reward>(`/rewards/${id}/relist`)
   return data
 }
 
