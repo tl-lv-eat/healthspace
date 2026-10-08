@@ -188,9 +188,13 @@ class BodyMetricOut(BaseModel):
 
 class WeekPlanUpsert(BaseModel):
     id: int | None = None
+    target_user_id: str | None = None
     week_start: str | None = None  # legacy alias for start_date
     start_date: str | None = None
     end_date: str | None = None
+    title: str | None = None
+    note: str = ""
+    daily_kcal_cap: int | None = None
     water_target_ml: int
     weekly_kcal_deficit: int = 3500
     weekly_workout_sessions: int = 4
@@ -208,6 +212,9 @@ class WeekPlanOut(BaseModel):
     start_date: str
     end_date: str
     period_days: int = 7
+    title: str | None = None
+    note: str = ""
+    daily_kcal_cap: int | None = None
     water_target_ml: int
     weekly_kcal_deficit: int = 3500
     weekly_workout_sessions: int = 4

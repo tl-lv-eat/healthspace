@@ -109,6 +109,9 @@ class WeekPlan(Base):
     workout_mode: Mapped[str] = mapped_column(String(32), nullable=False, default="any")
     workout_cardio_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
     workout_strength_sets: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    title: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    note: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    daily_kcal_cap: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     user: Mapped[User] = relationship(back_populates="week_plans")
 

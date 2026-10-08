@@ -99,6 +99,12 @@ def _ensure_week_plan_columns() -> None:
             alters.append("ALTER TABLE week_plans ADD COLUMN target_weight_kg FLOAT")
         if "end_date" not in existing:
             alters.append("ALTER TABLE week_plans ADD COLUMN end_date VARCHAR(10)")
+        if "title" not in existing:
+            alters.append("ALTER TABLE week_plans ADD COLUMN title VARCHAR(128)")
+        if "note" not in existing:
+            alters.append("ALTER TABLE week_plans ADD COLUMN note TEXT NOT NULL DEFAULT ''")
+        if "daily_kcal_cap" not in existing:
+            alters.append("ALTER TABLE week_plans ADD COLUMN daily_kcal_cap INTEGER")
         for sql in alters:
             conn.exec_driver_sql(sql)
         # Backfill end_date = week_start + 6 days for legacy rows

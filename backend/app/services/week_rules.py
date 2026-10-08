@@ -17,8 +17,16 @@ def effective_rules(plan: dict | None, user_default_water_ml: int) -> dict:
         workout_rule["minutes"] = int(plan.get("workout_cardio_min") or 30)
     if workout_mode == "strength_sets":
         workout_rule["sets"] = int(plan.get("workout_strength_sets") or 6)
+    period_days = int(plan.get("period_days") or 7)
     return {
         "water_target_ml": int(water),
+        "daily_kcal_cap": plan.get("daily_kcal_cap"),
+        "weekly_kcal_deficit": int(plan.get("weekly_kcal_deficit") or 3500),
+        "weekly_workout_sessions": int(plan.get("weekly_workout_sessions") or 4),
+        "target_weight_kg": plan.get("target_weight_kg"),
+        "period_days": max(1, period_days),
+        "start_date": plan.get("start_date"),
+        "end_date": plan.get("end_date"),
         "meal_rule": {"mode": meal_mode},
         "workout_rule": workout_rule,
     }
