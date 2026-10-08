@@ -46,4 +46,4 @@ Manual H5 login in browser: **not run** (backend dev server not up in this sessi
 
 **Verification:** `cd frontend && npm run build` → OK
 
-**Commit:** _(SHA appended after commit)_
+**Commit:** `479674f` — `fix: sync Pinia and redirect on HTTP 401`
