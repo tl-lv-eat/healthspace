@@ -1,6 +1,6 @@
 # 商城管理（我的 · 管理员设置）
 
-**Status:** draft  
+**Status:** implemented  
 **Date:** 2026-10-08  
 **Approach:** 「我的」独立瓷砖进入管理页；后端 `scope=catalog` + 双人可改价/下架/直接重新上架。
 
