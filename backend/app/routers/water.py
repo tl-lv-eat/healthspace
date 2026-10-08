@@ -62,6 +62,9 @@ def create_water_entry(
     db.add(entry)
     db.commit()
     db.refresh(entry)
+    from backend.app.services.points_hooks import after_daily_activity
+
+    after_daily_activity(db, user.id, body.date)
     return _entry_to_out(entry)
 
 
@@ -76,6 +79,9 @@ def patch_water_entry(
     entry.amount_ml = body.amount_ml
     db.commit()
     db.refresh(entry)
+    from backend.app.services.points_hooks import after_daily_activity
+
+    after_daily_activity(db, user.id, entry.date)
     return _entry_to_out(entry)
 
 

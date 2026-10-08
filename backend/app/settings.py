@@ -19,12 +19,19 @@ class UserConfig(BaseModel):
     role: str = "member"
 
 
+class PointsConfig(BaseModel):
+    daily_all_three: int = 10
+    weekly_plan_complete: int = 50
+    goal_complete: int = 20
+
+
 class Settings(BaseModel):
     database_url: str = "sqlite:///./data/jianfei.db"
     jwt_secret: str = "change-me-in-production"
     jwt_expire_hours: int = 720
     upload_dir: str = "uploads/meals"
     users: list[UserConfig] = Field(default_factory=list)
+    points: PointsConfig = Field(default_factory=PointsConfig)
 
 
 def _config_path() -> Path:
@@ -79,6 +86,8 @@ def _build_settings() -> Settings:
         os.environ.get("JWT_EXPIRE_HOURS") or app.get("jwt_expire_hours") or Settings.model_fields["jwt_expire_hours"].default
     )
     upload_dir = os.environ.get("UPLOAD_DIR") or app.get("upload_dir") or Settings.model_fields["upload_dir"].default
+    points_raw = app.get("points") or {}
+    points = PointsConfig.model_validate(points_raw) if points_raw else PointsConfig()
 
     return Settings(
         database_url=database_url,
@@ -86,6 +95,7 @@ def _build_settings() -> Settings:
         jwt_expire_hours=jwt_expire_hours,
         upload_dir=upload_dir,
         users=users,
+        points=points,
     )
 
 

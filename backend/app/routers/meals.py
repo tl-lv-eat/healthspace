@@ -111,6 +111,9 @@ def create_meal(
     db.add(meal)
     db.commit()
     db.refresh(meal)
+    from backend.app.services.points_hooks import after_daily_activity
+
+    after_daily_activity(db, user.id, body.date)
     return _meal_to_out(meal)
 
 
@@ -143,4 +146,7 @@ def patch_meal(
         meal.food_summary = body.food_summary
     db.commit()
     db.refresh(meal)
+    from backend.app.services.points_hooks import after_daily_activity
+
+    after_daily_activity(db, user.id, meal.date)
     return _meal_to_out(meal)

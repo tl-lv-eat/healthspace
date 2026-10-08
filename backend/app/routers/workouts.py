@@ -123,6 +123,9 @@ def create_workout(
     db.add(workout)
     db.commit()
     db.refresh(workout)
+    from backend.app.services.points_hooks import after_daily_activity
+
+    after_daily_activity(db, user.id, body.date)
     return _workout_to_out(workout)
 
 
