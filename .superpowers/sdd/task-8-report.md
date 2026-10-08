@@ -1,49 +1,27 @@
-# Task 8 Report: Vue H5 scaffold + login
+# Task 8 Report: CalendarView month history by role
 
-**Status:** Complete  
-**Date:** 2026-10-08
+## Status
+**Complete**
 
-## Deliverables
+## Summary
+Calendar month view now loads plans with `listWeekPlans(\`${year}-${month padded}\`)` whenever the month grid loads or changes. Plans are listed in two sections (🐉 龙龙 / 🍃 叶子), sorted by start date descending. Cards show title (or「未命名计划」), date range, water, period deficit, and optional daily kcal cap. Each section’s「+ 新建」opens `WeekPlanEditor` with `initialTargetUserId` pre-set; create flow still shows persona chips. Month grid unchanged — `CoupleDayCell` color levels only.
 
-| File | Change |
-|------|--------|
-| `frontend/` | Vue3 + Vite + TS; Vant (full), Pinia, vue-router, axios; proxy `/api` → `127.0.0.1:8000`. |
-| `frontend/src/api/http.ts` | Axios `/api`, Bearer from localStorage, 401 clears session keys. |
-| `frontend/src/stores/auth.ts` | Login → token + user in localStorage. |
-| `frontend/src/views/LoginView.vue` | 🐉 / 🍃 cards + password → `POST /auth/login`. |
-| `frontend/src/router/index.ts` | Guard; `/today` placeholder shell. |
-| `backend/app/main.py` | Mount `frontend/dist` when present. |
+## Files changed
+- `frontend/src/views/CalendarView.vue` — month-scoped list, persona grouping, enriched cards, `initialTargetUserId` wiring
 
 ## Verification
-
 ```text
-cd frontend && npm run build  → OK
-python -m pytest backend/tests -q  → 28 passed
+cd frontend && npm run build   → vue-tsc + vite OK
 ```
 
-Manual H5 login in browser: **not run** (backend dev server not up in this session).
+Manual smoke (recommended): 日历 → switch months → Network `GET /week-plans?list=true&month=YYYY-MM`. Tap section「+ 新建」→ editor opens with matching persona selected. Save plan overlapping month → appears under correct role group with title/range/water/deficit/cap.
 
 ## Commit
+```
+feat: calendar month plans grouped by persona
+```
 
-`feat: add Vue H5 login shell with Vant`
-
-## Interface checklist
-
-- [x] Login UI 🐉 / 🍃 + password
-- [x] JWT stored; unauthenticated → `/login`
-- [x] Post-login → `/today` empty shell
-
-## Follow-up (review Important)
-
-**Issue:** HTTP 401 interceptor cleared `localStorage` only; Pinia `token`/`user` stayed in memory so `/today` could render stale auth until reload.
-
-**Fix:**
-
-| File | Change |
-|------|--------|
-| `frontend/src/api/http.ts` | `setUnauthorizedHandler`; on 401 (except `POST /auth/login`) invoke handler instead of clearing storage directly. |
-| `frontend/src/main.ts` | After Pinia + router: handler calls `useAuthStore().clearSession()` and `router.push({ name: 'login' })`. |
-
-**Verification:** `cd frontend && npm run build` → OK
-
-**Commit:** `479674f` — `fix: sync Pinia and redirect on HTTP 401`
+## Concerns / follow-ups
+- Empty month shows one global hint plus per-persona empty lines; acceptable but slightly redundant when both lists are empty.
+- Plans are filtered server-side by month overlap; client only groups by `user_id` — unknown ids would not appear in either column (only `dragon` / `leaf` expected).
+- `weekProgress` banner at top remains viewer-centric from calendar API, not split by persona (unchanged from prior behavior).
