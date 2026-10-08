@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 
 from backend.app.db import init_db
 from backend.app.routers import auth as auth_router
+from backend.app.routers import couple_settings as couple_settings_router
 from backend.app.routers import body as body_router
 from backend.app.routers import calendar as calendar_router
 from backend.app.routers import chat as chat_router
@@ -56,6 +57,9 @@ app.include_router(week_plans_router.router, prefix="/api/week-plans", tags=["we
 app.include_router(calendar_router.router, prefix="/api/calendar", tags=["calendar"])
 app.include_router(journal_router.router, prefix="/api/journal", tags=["journal"])
 app.include_router(points_router.router, prefix="/api/points", tags=["points"])
+app.include_router(
+    couple_settings_router.router, prefix="/api/couple-settings", tags=["couple-settings"]
+)
 app.include_router(goals_router.router, prefix="/api/goals", tags=["goals"])
 app.include_router(rewards_router.router, prefix="/api/rewards", tags=["rewards"])
 app.include_router(reports_router.router, prefix="/api/reports", tags=["reports"])

@@ -211,6 +211,34 @@ class ChatMessage(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
 
+class CoupleSettings(Base):
+    """Shared couple-wide points settlement configuration (single row id=1)."""
+
+    __tablename__ = "couple_settings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    settle_hour: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    points_daily_water: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    points_daily_deficit: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    points_daily_workout_40: Mapped[int] = mapped_column(Integer, nullable=False, default=2)
+    points_plan_tier_b: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
+    points_plan_tier_a: Mapped[int] = mapped_column(Integer, nullable=False, default=-2)
+    points_plan_tier_fail: Mapped[int] = mapped_column(Integer, nullable=False, default=-5)
+
+
+class SettlementRun(Base):
+    """Idempotency record for daily / plan settlement runs."""
+
+    __tablename__ = "settlement_runs"
+    __table_args__ = (UniqueConstraint("run_date", "kind", name="uq_settlement_run_date_kind"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    run_date: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
+    kind: Mapped[str] = mapped_column(String(64), nullable=False)
+    meta_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+
 class PushBinding(Base):
     __tablename__ = "push_bindings"
 
