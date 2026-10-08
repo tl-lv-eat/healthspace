@@ -32,6 +32,11 @@ const router = createRouter({
       component: () => import('@/views/PushSettings.vue'),
     },
     {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('@/views/SettingsView.vue'),
+    },
+    {
       path: '/',
       component: TabLayout,
       redirect: '/today',
@@ -52,19 +57,22 @@ const router = createRouter({
           component: () => import('@/views/DayDetailView.vue'),
         },
         {
-          path: 'journal',
-          name: 'journal',
-          component: () => import('@/views/JournalView.vue'),
-        },
-        {
           path: 'body',
           name: 'body',
           component: () => import('@/views/BodyMetricsView.vue'),
         },
         {
+          path: 'journal',
+          redirect: '/calendar',
+        },
+        {
+          path: 'points-mall',
+          name: 'points-mall',
+          component: () => import('@/views/PointsMallView.vue'),
+        },
+        {
           path: 'goals',
-          name: 'goals',
-          component: () => import('@/views/GoalsView.vue'),
+          redirect: '/points-mall',
         },
         {
           path: 'mine',

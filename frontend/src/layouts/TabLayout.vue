@@ -18,7 +18,7 @@ const auth = useAuthStore()
     <van-tabbar route placeholder safe-area-inset-bottom>
       <van-tabbar-item replace to="/today" icon="home-o">今日</van-tabbar-item>
       <van-tabbar-item replace to="/calendar" icon="calendar-o">日历</van-tabbar-item>
-      <van-tabbar-item replace to="/goals" icon="flag-o">目标</van-tabbar-item>
+      <van-tabbar-item replace to="/points-mall" icon="gold-coin-o">积分与商城</van-tabbar-item>
       <van-tabbar-item replace to="/mine" icon="user-o">我的</van-tabbar-item>
     </van-tabbar>
   </div>
