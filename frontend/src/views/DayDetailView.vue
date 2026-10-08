@@ -1,83 +1,134 @@
-<script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { showFailToast } from 'vant'
-import { fetchCalendarDay, type CalendarDayDetail } from '@/api/calendar'
-import { useAuthStore } from '@/stores/auth'
-
-const route = useRoute()
-const router = useRouter()
-const auth = useAuthStore()
-const detail = ref<CalendarDayDetail | null>(null)
-
-const date = () => String(route.params.date ?? '')
-
-async function load() {
-  try {
-    detail.value = await fetchCalendarDay(date())
-  } catch {
-    showFailToast('加载日详情失败')
-  }
-}
-
-function editToday() {
-  void router.push({ name: 'today', query: { date: date() } })
-}
-
-onMounted(() => {
-  void load()
-})
-</script>
-
-<template>
-  <div class="day-detail">
-    <van-nav-bar :title="date()" left-arrow @click-left="router.back()" />
-
-    <template v-if="detail">
-      <section class="fit-card day-detail__block">
-        <h2>{{ detail.dragon.display_name }} · {{ detail.dragon.status.level }}</h2>
-        <p>
-          饮食 {{ detail.dragon.status.meal ? '✓' : '—' }} · 饮水
-          {{ detail.dragon.status.water ? '✓' : '—' }} · 运动
-          {{ detail.dragon.status.workout ? '✓' : '—' }}
-        </p>
-      </section>
-      <section class="fit-card day-detail__block">
-        <h2>{{ detail.leaf.display_name }} · {{ detail.leaf.status.level }}</h2>
-        <p>
-          饮食 {{ detail.leaf.status.meal ? '✓' : '—' }} · 饮水
-          {{ detail.leaf.status.water ? '✓' : '—' }} · 运动
-          {{ detail.leaf.status.workout ? '✓' : '—' }}
-        </p>
-      </section>
-
-      <section v-if="detail.me.user_id === auth.user?.id" class="fit-card day-detail__block">
-        <h2>我的记录</h2>
-        <p>餐 {{ detail.me.meals.length }} · 饮水 {{ detail.me.water.total_ml }} ml · 运动 {{ detail.me.workouts.length }}</p>
-        <van-button block type="primary" @click="editToday">编辑今日</van-button>
-      </section>
-    </template>
-  </div>
-</template>
-
-<style scoped>
-.day-detail {
-  padding-bottom: 32px;
-}
-
-.day-detail__block {
-  margin: 12px 16px;
-  padding: 16px;
-}
-
-.day-detail__block h2 {
-  margin: 0 0 8px;
-  font-size: 1rem;
-}
-
-.day-detail__block p {
-  margin: 0 0 12px;
-  font-size: 14px;
-  color: var(--muted);
-}
-</style>
+<script setup lang="ts">
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { showFailToast } from 'vant'
+import DaySectionPanel from '@/components/DaySectionPanel.vue'
+import { fetchCalendarDay, type CalendarDayDetail } from '@/api/calendar'
+import { formatDateLabel } from '@/api/today'
+
+const route = useRoute()
+const router = useRouter()
+const detail = ref<CalendarDayDetail | null>(null)
+
+const dateStr = computed(() => String(route.params.date ?? ''))
+
+async function load() {
+  try {
+    detail.value = await fetchCalendarDay(dateStr.value)
+  } catch {
+    showFailToast('加载日详情失败')
+  }
+}
+
+function editToday() {
+  void router.push({ name: 'today', query: { date: dateStr.value } })
+}
+
+const columns = computed(() => {
+  if (!detail.value) return []
+  const d = detail.value
+  return [
+    {
+      key: 'dragon' as const,
+      displayName: d.dragon.display_name,
+      status: d.dragon.status,
+      section: d.sections.dragon,
+    },
+    {
+      key: 'leaf' as const,
+      displayName: d.leaf.display_name,
+      status: d.leaf.status,
+      section: d.sections.leaf,
+    },
+  ]
+})
+
+watch(dateStr, () => {
+  void load()
+})
+
+onMounted(() => {
+  void load()
+})
+</script>
+
+<template>
+  <div class="day">
+    <header class="day__bar">
+      <button type="button" class="day__back" aria-label="返回" @click="router.back()">←</button>
+      <h1>{{ formatDateLabel(dateStr) }}</h1>
+      <button type="button" class="day__edit" @click="editToday">去改记</button>
+    </header>
+
+    <div v-if="detail" class="day__grid">
+      <DaySectionPanel
+        v-for="col in columns"
+        :key="col.key"
+        :section="col.section"
+        :display-name="col.displayName"
+        :status="col.status"
+      />
+    </div>
+    <p v-else class="day__loading">加载中…</p>
+  </div>
+</template>
+
+<style scoped>
+.day {
+  padding: 12px 14px 40px;
+}
+
+.day__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.day__bar h1 {
+  flex: 1;
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  min-width: 0;
+}
+
+.day__back,
+.day__edit {
+  border: none;
+  background: var(--card);
+  color: var(--ink);
+  font-weight: 800;
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+
+.day__edit {
+  background: var(--primary);
+  color: var(--on-primary, #fff);
+}
+
+.day__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+@media (max-width: 640px) {
+  .day__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.day__loading {
+  margin: 24px 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+</style>
