@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import TabLayout from '@/layouts/TabLayout.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
@@ -11,16 +12,45 @@ const router = createRouter({
       meta: { public: true },
     },
     {
-      path: '/today',
-      name: 'today',
-      component: () => import('@/views/TodayView.vue'),
-    },
-    {
       path: '/workout',
       name: 'workout',
       component: () => import('@/views/WorkoutView.vue'),
     },
-    { path: '/', redirect: '/today' },
+    {
+      path: '/',
+      component: TabLayout,
+      redirect: '/today',
+      children: [
+        {
+          path: 'today',
+          name: 'today',
+          component: () => import('@/views/TodayView.vue'),
+        },
+        {
+          path: 'calendar',
+          name: 'calendar',
+          component: () => import('@/views/PlaceholderTabView.vue'),
+          props: { phase: 'P1', title: '日历' },
+        },
+        {
+          path: 'journal',
+          name: 'journal',
+          component: () => import('@/views/PlaceholderTabView.vue'),
+          props: { phase: 'P1', title: '日志' },
+        },
+        {
+          path: 'goals',
+          name: 'goals',
+          component: () => import('@/views/PlaceholderTabView.vue'),
+          props: { phase: 'P2', title: '目标' },
+        },
+        {
+          path: 'mine',
+          name: 'mine',
+          component: () => import('@/views/MineView.vue'),
+        },
+      ],
+    },
   ],
 })
 
