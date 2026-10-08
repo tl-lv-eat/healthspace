@@ -1,6 +1,6 @@
 # 计划 · 日历 · 今日联动（角色计划 + 双栏日详情）
 
-**Status:** approved for planning  
+**Status:** implemented  
 **Date:** 2026-10-08  
 **Approach:** 薄改现有页（日历 / 今日 / 计划 API 扩展），不新开计划 Tab、不另做只读回放页。
 
