@@ -186,9 +186,12 @@ function onComposeClosed() {
 </script>
 
 <template>
-  <section class="panel">
-    <header class="panel-head">
-      <h2>饮食</h2>
+  <section class="meals fit-card fit-card-pad">
+    <header class="meals__head">
+      <div>
+        <p class="fit-section-label">Nutrition</p>
+        <h2>饮食</h2>
+      </div>
     </header>
 
     <input
@@ -204,8 +207,8 @@ function onComposeClosed() {
         <div class="meal-card-head">
           <span class="meal-label">{{ MEAL_TYPE_LABELS[mt] }}</span>
           <div class="meal-actions">
-            <van-button size="mini" plain type="primary" @click="openMealActions(mt)">选图</van-button>
-            <van-button size="mini" plain @click="startManual(mt)">手填</van-button>
+            <button type="button" class="btn-soft primary" @click="openMealActions(mt)">选图</button>
+            <button type="button" class="btn-soft" @click="startManual(mt)">手填</button>
           </div>
         </div>
         <ul v-if="mealsByType[mt].length" class="meal-items">
@@ -253,14 +256,14 @@ function onComposeClosed() {
 </template>
 
 <style scoped>
-.panel {
-  margin-bottom: 24px;
+.meals {
+  margin-bottom: 14px;
 }
 
-.panel-head h2 {
-  margin: 0 0 12px;
-  font-size: 17px;
-  font-weight: 600;
+.meals__head h2 {
+  margin: 0 0 14px;
+  font-size: 1.25rem;
+  font-weight: 800;
 }
 
 .hidden-file {
@@ -274,10 +277,9 @@ function onComposeClosed() {
 }
 
 .meal-card {
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: #fff;
-  border: 1px solid #ebedf0;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
 }
 
 .meal-card-head {
@@ -288,13 +290,31 @@ function onComposeClosed() {
 }
 
 .meal-label {
-  font-weight: 600;
+  font-weight: 800;
   font-size: 15px;
+  font-family: var(--font-display);
 }
 
 .meal-actions {
   display: flex;
   gap: 6px;
+}
+
+.btn-soft {
+  border: none;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 7px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-soft.primary {
+  background: var(--primary-soft);
+  color: var(--primary-dark);
 }
 
 .meal-items {
@@ -307,8 +327,8 @@ function onComposeClosed() {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  padding: 8px 0;
-  border-top: 1px solid #f2f3f5;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
   font-size: 14px;
   cursor: pointer;
 }
@@ -320,34 +340,38 @@ function onComposeClosed() {
 
 .summary {
   flex: 1;
-  color: #323233;
+  font-weight: 600;
+  color: var(--ink);
 }
 
 .kcal {
-  color: #1989fa;
+  color: var(--cal);
+  font-weight: 800;
   white-space: nowrap;
 }
 
 .meal-empty {
   margin: 0;
   font-size: 13px;
-  color: #969799;
+  color: var(--muted);
 }
 
 .compose {
-  padding: 16px 16px 24px;
+  padding: 20px 16px 28px;
 }
 
 .compose h3 {
   margin: 0 0 12px;
-  font-size: 16px;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 800;
 }
 
 .preview {
   width: 100%;
   max-height: 200px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 16px;
   margin-bottom: 12px;
 }
 </style>

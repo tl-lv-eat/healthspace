@@ -12,23 +12,52 @@ function logout() {
 </script>
 
 <template>
-  <div class="mine-view">
-    <van-cell-group inset>
-      <van-cell title="账号" :value="auth.user?.id ?? '—'" />
-      <van-cell title="展示名" :value="auth.user?.display_name ?? '—'" />
-    </van-cell-group>
-    <div class="mine-view__actions">
-      <van-button block type="default" @click="logout">退出登录</van-button>
-    </div>
+  <div class="mine">
+    <header class="mine__hero fit-card">
+      <p class="fit-section-label">Profile</p>
+      <h1>{{ auth.user?.display_name ?? '—' }}</h1>
+      <p class="mine__id">@{{ auth.user?.id ?? '—' }}</p>
+    </header>
+
+    <button type="button" class="mine__logout" @click="logout">退出登录</button>
   </div>
 </template>
 
 <style scoped>
-.mine-view {
-  padding: 16px 0;
+.mine {
+  padding: 20px 16px 32px;
 }
 
-.mine-view__actions {
-  margin: 24px 16px;
+.mine__hero {
+  padding: 28px 22px;
+  margin-bottom: 20px;
+  background:
+    linear-gradient(145deg, var(--primary-soft), #fff 55%),
+    var(--card);
+}
+
+.mine__hero h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.mine__id {
+  margin: 8px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.mine__logout {
+  width: 100%;
+  height: 48px;
+  border: none;
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  font-weight: 800;
+  color: var(--cal);
+  cursor: pointer;
 }
 </style>

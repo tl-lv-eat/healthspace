@@ -6,32 +6,40 @@ defineProps<{
 </script>
 
 <template>
-  <div class="placeholder-tab">
-    <van-empty>
-      <p class="placeholder-tab__title">{{ title }}</p>
-      <p class="placeholder-tab__phase">{{ phase }} 敬请期待</p>
-    </van-empty>
+  <div class="ph">
+    <div class="ph__card fit-card">
+      <p class="fit-section-label">Coming Soon</p>
+      <h1>{{ title }}</h1>
+      <p class="ph__phase">{{ phase }} 敬请期待</p>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.placeholder-tab {
-  min-height: 60vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.ph {
+  min-height: 70vh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
 }
 
-.placeholder-tab__title {
-  margin: 0 0 8px;
-  font-size: 18px;
-  font-weight: 600;
-  color: #323233;
+.ph__card {
+  width: 100%;
+  max-width: 360px;
+  padding: 36px 24px;
+  text-align: center;
 }
 
-.placeholder-tab__phase {
+.ph__card h1 {
   margin: 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+}
+
+.ph__phase {
+  margin: 12px 0 0;
   font-size: 14px;
-  color: #969799;
+  font-weight: 600;
+  color: var(--muted);
 }
 </style>

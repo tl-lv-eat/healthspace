@@ -103,35 +103,51 @@ async function onDelete(w: Workout) {
 <style scoped>
 .workout-shell {
   min-height: 100vh;
-  background: #f7f8fa;
   padding-bottom: 32px;
 }
 
 .date-line {
-  margin: 0;
-  padding: 10px 16px;
+  margin: 0 16px 12px;
+  padding: 12px 16px;
   font-size: 13px;
-  color: #646566;
-  background: #fff;
-  border-bottom: 1px solid #ebedf0;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--card);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
 }
 
 .logged {
-  padding: 16px 0 0;
+  padding: 8px 16px 0;
 }
 
 .logged h3 {
-  margin: 0 16px 10px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #646566;
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .swipe-btn {
   height: 100%;
 }
 
+:deep(.van-tabs__wrap) {
+  margin: 8px 16px 0;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+}
+
 :deep(.van-tabs__content) {
-  padding: 0 16px;
+  padding: 12px 16px;
+}
+
+:deep(.van-cell-group--inset) {
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
 }
 </style>

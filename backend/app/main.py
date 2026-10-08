@@ -4,6 +4,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.app.db import init_db
@@ -35,5 +36,25 @@ def on_startup() -> None:
 
 
 _frontend_dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"
-if _frontend_dist.is_dir():
-    app.mount("/", StaticFiles(directory=_frontend_dist, html=True), name="frontend")
+_assets_dir = _frontend_dist / "assets"
+if _assets_dir.is_dir():
+    app.mount("/assets", StaticFiles(directory=_assets_dir), name="frontend-assets")
+
+
+@app.get("/{full_path:path}")
+def spa_fallback(full_path: str) -> FileResponse:
+    """Serve SPA index for client routes like /today (avoid blank 404 on refresh)."""
+    if not _frontend_dist.is_dir():
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=404, detail="frontend dist not built")
+    candidate = (_frontend_dist / full_path).resolve()
+    try:
+        candidate.relative_to(_frontend_dist.resolve())
+    except ValueError as exc:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=404, detail="invalid path") from exc
+    if full_path and candidate.is_file():
+        return FileResponse(candidate)
+    return FileResponse(_frontend_dist / "index.html")

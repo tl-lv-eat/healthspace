@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { closeToast, showFailToast, showLoadingToast } from 'vant'
 import WaterPanel from '@/components/WaterPanel.vue'
@@ -60,28 +60,67 @@ onMounted(() => {
   void reload(true)
 })
 
-function doneLabel(ok: boolean): string {
-  return ok ? '✓' : '—'
-}
-
 function goWorkout() {
   router.push({ name: 'workout', query: { date: date.value } })
 }
 
-function partnerSummary(): string {
-  const p = today.value?.partner
-  if (!p) return ''
-  return `${p.display_name}：饮食 ${doneLabel(p.done.meal)} · 饮水 ${doneLabel(p.done.water)} (${p.water_total_ml}/${p.water_target_ml}ml) · 运动 ${doneLabel(p.done.workout)}`
-}
+const mealKcal = computed(() =>
+  (today.value?.me.meals ?? []).reduce((s, m) => s + (m.user_kcal || 0), 0),
+)
+
+const doneCount = computed(() => {
+  const d = today.value?.me.done
+  if (!d) return 0
+  return Number(d.meal) + Number(d.water) + Number(d.workout)
+})
 </script>
 
 <template>
-  <div class="today-shell">
-    <van-nav-bar :title="formatDateLabel(date)" fixed placeholder />
-    <div v-if="today" class="partner-bar">
-      {{ partnerSummary() }}
+  <div class="today">
+    <header class="today__top">
+      <div>
+        <p class="today__hello">Hi, {{ auth.user?.display_name ?? '—' }}</p>
+        <h1 class="today__date">{{ formatDateLabel(date) }}</h1>
+      </div>
+      <div class="today__ring" :style="{ '--p': `${(doneCount / 3) * 100}%` }">
+        <span>{{ doneCount }}/3</span>
+      </div>
+    </header>
+
+    <div v-if="today" class="today__partner fit-card">
+      <div class="today__partner-head">
+        <span class="today__partner-name">{{ today.partner.display_name }}</span>
+        <span class="today__partner-sub">对方今日</span>
+      </div>
+      <div class="today__dots">
+        <span :class="{ on: today.partner.done.meal }">饮食</span>
+        <span :class="{ on: today.partner.done.water }">饮水</span>
+        <span :class="{ on: today.partner.done.workout }">运动</span>
+      </div>
+      <p class="today__partner-water">
+        {{ today.partner.water_total_ml }} / {{ today.partner.water_target_ml }} ml
+      </p>
     </div>
-    <main class="today-body">
+
+    <div class="today__stats">
+      <div class="stat fit-card">
+        <p class="stat__k">摄入</p>
+        <p class="stat__v cal">{{ mealKcal }}</p>
+        <p class="stat__u">kcal</p>
+      </div>
+      <div class="stat fit-card">
+        <p class="stat__k">饮水</p>
+        <p class="stat__v water">{{ waterDay?.total_ml ?? 0 }}</p>
+        <p class="stat__u">ml</p>
+      </div>
+      <div class="stat fit-card">
+        <p class="stat__k">运动</p>
+        <p class="stat__v work">{{ today?.me.workouts.length ?? 0 }}</p>
+        <p class="stat__u">条</p>
+      </div>
+    </div>
+
+    <main class="today__body">
       <van-pull-refresh v-model="refreshing" @refresh="reload()">
         <template v-if="today && waterDay">
           <WaterPanel
@@ -92,79 +131,224 @@ function partnerSummary(): string {
             @changed="reload()"
           />
           <MealPanel :date="date" :meals="today.me.meals" @changed="reload()" />
-          <section class="panel workout-panel">
-            <header class="panel-head">
-              <h2>运动</h2>
-              <van-button size="small" type="primary" plain round @click="goWorkout">去记录</van-button>
+          <section class="workout-block fit-card fit-card-pad">
+            <header class="workout-block__head">
+              <div>
+                <p class="fit-section-label">Workout</p>
+                <h2>今日运动</h2>
+              </div>
+              <button type="button" class="workout-block__cta" @click="goWorkout">去记录</button>
             </header>
-            <van-cell-group v-if="today.me.workouts.length" inset class="entry-list">
-              <van-cell
-                v-for="w in today.me.workouts"
-                :key="w.id"
-                :title="formatWorkoutSummary(w)"
-                :label="w.created_at.slice(11, 16)"
-              />
-            </van-cell-group>
-            <p v-else class="empty-hint">今天还没有运动记录</p>
+            <ul v-if="today.me.workouts.length" class="workout-block__list">
+              <li v-for="w in today.me.workouts" :key="w.id">
+                <span>{{ formatWorkoutSummary(w) }}</span>
+                <time>{{ w.created_at.slice(11, 16) }}</time>
+              </li>
+            </ul>
+            <p v-else class="empty">还没有运动 — 点右上角开始</p>
           </section>
         </template>
         <van-empty v-else description="暂无数据" />
       </van-pull-refresh>
     </main>
-    <footer v-if="auth.user" class="today-foot">{{ auth.user.display_name }} 的今日</footer>
   </div>
 </template>
 
 <style scoped>
-.today-shell {
+.today {
   min-height: 100vh;
-  background: #f7f8fa;
+  padding: 20px 16px 28px;
 }
 
-.partner-bar {
-  padding: 8px 16px;
-  font-size: 12px;
-  line-height: 1.5;
-  color: #646566;
-  background: #fff;
-  border-bottom: 1px solid #ebedf0;
-}
-
-.today-body {
-  padding: 16px 16px 32px;
-}
-
-.today-foot {
-  text-align: center;
-  padding: 12px;
-  font-size: 12px;
-  color: #c8c9cc;
-}
-
-.panel {
-  margin-bottom: 20px;
-}
-
-.panel-head {
+.today__top {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.today__hello {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.today__date {
+  margin: 4px 0 0;
+  font-size: 1.65rem;
+  font-weight: 800;
+}
+
+.today__ring {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 800;
+  background:
+    radial-gradient(circle at center, var(--bg) 58%, transparent 59%),
+    conic-gradient(var(--primary) var(--p), var(--line) 0);
+  color: var(--ink);
+}
+
+.today__partner {
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+
+.today__partner-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
   margin-bottom: 10px;
 }
 
-.panel-head h2 {
-  margin: 0;
-  font-size: 17px;
+.today__partner-name {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.today__partner-sub {
+  font-size: 12px;
+  color: var(--muted);
   font-weight: 600;
 }
 
-.entry-list {
-  margin: 0 !important;
+.today__dots {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.empty-hint {
-  margin: 8px 4px 0;
+.today__dots span {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--bg);
+  color: var(--muted);
+}
+
+.today__dots span.on {
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+}
+
+.today__partner-water {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--water);
+  font-weight: 700;
+}
+
+.today__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.stat {
+  padding: 14px 10px;
+  text-align: center;
+}
+
+.stat__k {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.stat__v {
+  margin: 6px 0 0;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.stat__v.cal {
+  color: var(--cal);
+}
+.stat__v.water {
+  color: var(--water);
+}
+.stat__v.work {
+  color: #e67700;
+}
+
+.stat__u {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.today__body {
+  padding-bottom: 8px;
+}
+
+.workout-block {
+  margin-top: 4px;
+}
+
+.workout-block__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.workout-block__head h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.workout-block__cta {
+  border: none;
+  background: var(--workout-soft);
+  color: #e67700;
+  font-weight: 800;
   font-size: 13px;
-  color: #969799;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.workout-block__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.workout-block__list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.workout-block__list time {
+  color: var(--muted);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
 }
 </style>

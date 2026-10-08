@@ -97,8 +97,11 @@ async function save() {
 
 .hint {
   margin: 0 4px 12px;
-  font-size: 13px;
-  color: #969799;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .type-grid {
@@ -108,17 +111,20 @@ async function save() {
 }
 
 .type-card {
-  padding: 18px 8px;
-  border: 1px solid #ebedf0;
-  border-radius: 10px;
-  background: #fff;
-  font-size: 15px;
-  font-weight: 500;
-  color: #323233;
+  padding: 20px 8px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+  cursor: pointer;
 }
 
 .type-card:active {
-  background: #f2f3f5;
+  background: var(--workout-soft);
+  color: #e67700;
 }
 
 .save-btn {

@@ -22,7 +22,6 @@ import { RouterView } from 'vue-router'
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--page-bg, #f7f8fa);
 }
 
 .tab-layout__main {

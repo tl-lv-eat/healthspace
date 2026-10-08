@@ -1,3 +1,44 @@
+/* Fitness Kit inspired — clean mobile health dashboard */
+:root {
+  --bg: #eef3f0;
+  --bg-spot: #d8f3e7;
+  --card: #ffffff;
+  --ink: #0f1a14;
+  --muted: #66736c;
+  --line: #e6ece8;
+  --primary: #12b886;
+  --primary-dark: #0a9b70;
+  --primary-soft: #d3f9e8;
+  --water: #339af0;
+  --water-soft: #d0ebff;
+  --cal: #ff6b6b;
+  --cal-soft: #ffe3e3;
+  --workout: #fab005;
+  --workout-soft: #fff3bf;
+  --shadow: 0 10px 30px rgba(15, 26, 20, 0.06);
+  --shadow-sm: 0 4px 14px rgba(15, 26, 20, 0.05);
+  --radius: 24px;
+  --radius-sm: 16px;
+  --font-display: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-ui: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+
+  --van-primary-color: var(--primary);
+  --van-success-color: var(--primary);
+  --van-danger-color: var(--cal);
+  --van-warning-color: var(--workout);
+  --van-base-font: var(--font-ui);
+  --van-font-bold: 700;
+  --van-button-primary-background: var(--primary);
+  --van-button-primary-border-color: var(--primary);
+  --van-button-radius: 14px;
+  --van-tabbar-item-active-color: var(--primary);
+  --van-progress-color: var(--primary);
+  --van-progress-background: var(--line);
+  --van-nav-bar-background: transparent;
+  --van-cell-background: transparent;
+  --van-border-color: var(--line);
+}
+
 *,
 *::before,
 *::after {
@@ -9,6 +50,81 @@ body,
 #app {
   margin: 0;
   min-height: 100%;
-  background: #f7f8fa;
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background:
+    radial-gradient(90% 60% at 100% -10%, var(--bg-spot), transparent 55%),
+    radial-gradient(70% 50% at 0% 20%, rgba(51, 154, 240, 0.12), transparent 50%),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+h1,
+h2,
+h3,
+.fit-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+.fit-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+.fit-card-pad {
+  padding: 18px;
+}
+
+.fit-section-label {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.van-nav-bar {
+  background: transparent !important;
+}
+
+.van-nav-bar__title {
+  font-family: var(--font-display) !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+}
+
+.van-tabbar {
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(18px);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -8px 24px rgba(15, 26, 20, 0.04);
+}
+
+.van-tabbar-item__text {
+  font-weight: 600;
+  font-size: 11px !important;
+}
+
+.van-button--round {
+  border-radius: 14px !important;
+}
+
+.van-cell-group--inset {
+  margin: 0 !important;
+  border-radius: var(--radius-sm) !important;
+  overflow: hidden;
+}
+
+.van-hairline--top-bottom::after,
+.van-hairline-unset--top-bottom::after {
+  border-color: var(--line) !important;
 }

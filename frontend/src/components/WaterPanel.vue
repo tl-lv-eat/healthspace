@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { showConfirmDialog, showFailToast, showLoadingToast, closeToast } from 'vant'
 import type { WaterEntry } from '@/api/water'
 import { addWaterEntry, deleteWaterEntry, patchWaterEntry } from '@/api/water'
@@ -76,41 +76,51 @@ async function onDelete(entry: WaterEntry) {
   }
 }
 
-const progressPct = () =>
-  props.targetMl > 0 ? Math.min(100, Math.round((props.totalMl / props.targetMl) * 100)) : 0
+const progressPct = computed(() =>
+  props.targetMl > 0 ? Math.min(100, Math.round((props.totalMl / props.targetMl) * 100)) : 0,
+)
 </script>
 
 <template>
-  <section class="panel">
-    <header class="panel-head">
-      <h2>饮水</h2>
-      <span class="totals">{{ totalMl }} / {{ targetMl }} ml</span>
+  <section class="water fit-card fit-card-pad">
+    <header class="water__head">
+      <div>
+        <p class="fit-section-label">Hydration</p>
+        <h2>饮水</h2>
+      </div>
+      <div class="water__ring" :style="{ '--p': `${progressPct}%` }">
+        <strong>{{ progressPct }}%</strong>
+      </div>
     </header>
-    <van-progress :percentage="progressPct()" stroke-width="8" />
 
-    <div class="quick-row">
-      <van-button
+    <p class="water__totals">
+      <span class="water__now">{{ totalMl }}</span>
+      <span class="water__sep">/</span>
+      <span>{{ targetMl }} ml</span>
+    </p>
+
+    <div class="water__quick">
+      <button
         v-for="amt in QUICK_AMOUNTS"
         :key="amt"
-        size="small"
-        type="primary"
-        plain
-        round
+        type="button"
+        class="water__chip"
         @click="quickAdd(amt)"
       >
         +{{ amt }}
-      </van-button>
+      </button>
     </div>
 
-    <van-cell-group v-if="entries.length" inset class="entry-list">
-      <van-swipe-cell v-for="e in entries" :key="e.id">
-        <van-cell :title="`${e.amount_ml} ml`" :label="e.created_at.slice(11, 16)" is-link @click="openEdit(e)" />
-        <template #right>
-          <van-button square type="danger" text="删除" class="swipe-btn" @click="onDelete(e)" />
-        </template>
-      </van-swipe-cell>
-    </van-cell-group>
-    <p v-else class="empty-hint">点上方按钮快速加水</p>
+    <ul v-if="entries.length" class="water__list">
+      <li v-for="e in entries" :key="e.id">
+        <button type="button" class="water__row" @click="openEdit(e)">
+          <span>{{ e.amount_ml }} ml</span>
+          <time>{{ e.created_at.slice(11, 16) }}</time>
+        </button>
+        <button type="button" class="water__del" @click="onDelete(e)">删</button>
+      </li>
+    </ul>
+    <p v-else class="water__empty">点上方快速加水</p>
 
     <van-dialog
       v-model:show="editVisible"
@@ -124,46 +134,117 @@ const progressPct = () =>
 </template>
 
 <style scoped>
-.panel {
-  margin-bottom: 20px;
+.water {
+  margin-bottom: 14px;
 }
 
-.panel-head {
+.water__head {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 10px;
 }
 
-.panel-head h2 {
+.water h2 {
   margin: 0;
-  font-size: 17px;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.water__ring {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at center, var(--card) 58%, transparent 59%),
+    conic-gradient(var(--water) var(--p), var(--water-soft) 0);
+  font-size: 12px;
+  color: var(--water);
+}
+
+.water__totals {
+  margin: 12px 0 0;
+  font-size: 14px;
+  color: var(--muted);
   font-weight: 600;
 }
 
-.totals {
-  font-size: 14px;
-  color: #646566;
+.water__now {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--water);
 }
 
-.quick-row {
+.water__sep {
+  margin: 0 4px;
+}
+
+.water__quick {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 14px 0 12px;
+  margin: 16px 0 8px;
 }
 
-.entry-list {
-  margin: 0 !important;
-}
-
-.swipe-btn {
-  height: 100%;
-}
-
-.empty-hint {
-  margin: 8px 4px 0;
+.water__chip {
+  border: none;
+  background: var(--water-soft);
+  color: #1c7ed6;
+  font-weight: 800;
   font-size: 13px;
-  color: #969799;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.water__list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.water__list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.water__row {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.water__row time {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.water__del {
+  border: none;
+  background: var(--cal-soft);
+  color: var(--cal);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.water__empty {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--muted);
 }
 </style>

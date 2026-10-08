@@ -177,11 +177,13 @@ async function save() {
 
 .type-card {
   padding: 18px 8px;
-  border: 1px solid #ebedf0;
-  border-radius: 10px;
-  background: #fff;
-  font-size: 15px;
-  font-weight: 500;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .load-center {
@@ -200,20 +202,22 @@ async function save() {
 .exercise-card {
   display: flex;
   gap: 12px;
-  padding: 10px;
-  border: 1px solid #ebedf0;
-  border-radius: 10px;
-  background: #fff;
+  padding: 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
   text-align: left;
+  cursor: pointer;
 }
 
 .exercise-gif {
   width: 88px;
   height: 88px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 14px;
   flex-shrink: 0;
-  background: #f7f8fa;
+  background: var(--bg);
 }
 
 .exercise-gif.placeholder {
@@ -221,7 +225,7 @@ async function save() {
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  color: #c8c9cc;
+  color: var(--muted);
 }
 
 .exercise-meta {
@@ -232,14 +236,16 @@ async function save() {
 .exercise-meta strong {
   display: block;
   font-size: 15px;
+  font-weight: 800;
   margin-bottom: 4px;
+  font-family: var(--font-display);
 }
 
 .exercise-meta p {
   margin: 0;
   font-size: 12px;
   line-height: 1.45;
-  color: #646566;
+  color: var(--muted);
 }
 
 .save-btn {

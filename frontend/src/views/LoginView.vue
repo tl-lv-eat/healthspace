@@ -5,8 +5,8 @@ import { showFailToast, showLoadingToast, closeToast } from 'vant'
 import { useAuthStore } from '@/stores/auth'
 
 const USERS = [
-  { id: 'dragon', emoji: '🐉', label: '龙' },
-  { id: 'leaf', emoji: '🍃', label: '叶' },
+  { id: 'dragon', emoji: '🐉', label: 'Dragon', hint: '男方' },
+  { id: 'leaf', emoji: '🍃', label: 'Leaf', hint: '女方' },
 ] as const
 
 const auth = useAuthStore()
@@ -43,110 +43,174 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="login-page">
-    <header class="login-header">
-      <h1>双人减</h1>
-      <p>选择身份并输入密码</p>
-    </header>
+  <div class="login">
+    <div class="login__hero">
+      <p class="login__eyebrow">COUPLE FITNESS</p>
+      <h1 class="login__brand">双人减</h1>
+      <p class="login__tagline">饮食 · 饮水 · 训练，和 TA 一起推进</p>
+    </div>
 
-    <div class="user-cards">
+    <div class="login__pick">
       <button
         v-for="u in USERS"
         :key="u.id"
         type="button"
-        class="user-card"
-        :class="{ active: selectedId === u.id }"
+        class="persona"
+        :class="{ 'persona--on': selectedId === u.id, [`persona--${u.id}`]: true }"
         @click="selectedId = u.id"
       >
-        <span class="emoji">{{ u.emoji }}</span>
-        <span class="name">{{ u.label }}</span>
+        <span class="persona__emoji">{{ u.emoji }}</span>
+        <span class="persona__label">{{ u.label }}</span>
+        <span class="persona__hint">{{ u.hint }}</span>
       </button>
     </div>
 
-    <van-cell-group inset class="form">
+    <div class="login__sheet fit-card">
+      <label class="login__field-label">密码</label>
       <van-field
         v-model="password"
         type="password"
-        label="密码"
-        placeholder="请输入密码"
+        placeholder="输入密码进入"
         autocomplete="current-password"
+        class="login__field"
         @keyup.enter="onSubmit"
       />
-    </van-cell-group>
-
-    <div class="actions">
-      <van-button type="primary" block round :loading="loading" @click="onSubmit">
-        进入
+      <van-button
+        type="primary"
+        block
+        class="login__cta"
+        :loading="loading"
+        @click="onSubmit"
+      >
+        Start Today
       </van-button>
     </div>
   </div>
 </template>
 
 <style scoped>
-.login-page {
+.login {
   min-height: 100vh;
-  padding: 48px 16px 24px;
+  padding: 56px 22px 32px;
+  display: flex;
+  flex-direction: column;
 }
 
-.login-header {
-  text-align: center;
-  margin-bottom: 32px;
+.login__hero {
+  margin-bottom: 36px;
 }
 
-.login-header h1 {
-  margin: 0 0 8px;
-  font-size: 1.75rem;
-  font-weight: 600;
+.login__eyebrow {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--primary-dark);
 }
 
-.login-header p {
+.login__brand {
   margin: 0;
-  color: #969799;
-  font-size: 14px;
+  font-size: clamp(2.6rem, 12vw, 3.4rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--ink);
 }
 
-.user-cards {
+.login__tagline {
+  margin: 14px 0 0;
+  font-size: 15px;
+  color: var(--muted);
+  font-weight: 500;
+  max-width: 16em;
+}
+
+.login__pick {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
-.user-card {
+.persona {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 120px;
-  padding: 16px;
-  border: 2px solid #ebedf0;
-  border-radius: 12px;
-  background: #fff;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 132px;
+  padding: 18px 16px;
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  text-align: left;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
-.user-card.active {
-  border-color: #1989fa;
-  box-shadow: 0 4px 12px rgba(25, 137, 250, 0.15);
+.persona--on {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
 }
 
-.user-card .emoji {
-  font-size: 2.5rem;
+.persona--dragon.persona--on {
+  border-color: #ff8787;
+  background: linear-gradient(160deg, #fff 40%, var(--cal-soft));
+}
+
+.persona--leaf.persona--on {
+  border-color: var(--primary);
+  background: linear-gradient(160deg, #fff 40%, var(--primary-soft));
+}
+
+.persona__emoji {
+  font-size: 2.2rem;
   line-height: 1;
+  margin-bottom: 8px;
 }
 
-.user-card .name {
-  font-size: 15px;
-  color: #323233;
+.persona__label {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
 }
 
-.form {
-  margin-bottom: 24px;
+.persona__hint {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
 }
 
-.actions {
-  padding: 0 4px;
+.login__sheet {
+  padding: 20px 18px 18px;
+  margin-top: auto;
+}
+
+.login__field-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.login__field {
+  margin-bottom: 16px;
+  padding: 4px 12px;
+  background: var(--bg);
+  border-radius: 14px;
+}
+
+.login__field :deep(.van-cell) {
+  background: transparent;
+  padding: 8px 0;
+}
+
+.login__cta {
+  height: 48px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.02em;
+  border-radius: 14px !important;
 }
 </style>
