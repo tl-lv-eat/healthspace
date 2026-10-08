@@ -148,7 +148,7 @@ def test_redeem_ok(client, auth_header, partner_header, db_session):
     assert bal == 70
 
 
-def test_redeem_cancel_refund(client, auth_header, partner_header, db_session):
+def test_redeem_cancel_not_allowed(client, auth_header, partner_header, db_session):
     from backend.app.services.points import grant
 
     grant(db_session, "dragon", 50, "test", "dragon:test:refund")
@@ -165,10 +165,55 @@ def test_redeem_cancel_refund(client, auth_header, partner_header, db_session):
     )
     _approve(client, partner_header, rw["id"])
     red = client.post(f"/api/rewards/{rw['id']}/redeem", headers=auth_header).json()
-    client.patch(
+    cancel = client.patch(
         f"/api/rewards/redemptions/{red['id']}",
         headers=auth_header,
         json={"status": "cancelled"},
     )
+    assert cancel.status_code == 400
     bal = client.get("/api/points/balance", headers=auth_header).json()["balance"]
-    assert bal == 50
+    assert bal == 30
+
+
+def test_couple_redemptions_scope_and_redeemer_fulfill(
+    client, auth_header, partner_header, db_session
+):
+    from backend.app.services.points import grant
+
+    grant(db_session, "dragon", 100, "test", "dragon:test:couple-inv")
+    grant(db_session, "leaf", 100, "test", "leaf:test:couple-inv")
+    rw_dragon = _create_reward(client, auth_header, title="龙奖", category="food")
+    rw_leaf = _create_reward(client, partner_header, title="叶奖", category="fun")
+    _approve(client, partner_header, rw_dragon["id"])
+    _approve(client, auth_header, rw_leaf["id"])
+
+    red_dragon = client.post(
+        f"/api/rewards/{rw_dragon['id']}/redeem", headers=auth_header
+    ).json()
+    red_leaf = client.post(
+        f"/api/rewards/{rw_leaf['id']}/redeem", headers=partner_header
+    ).json()
+
+    partner_fulfill = client.patch(
+        f"/api/rewards/redemptions/{red_dragon['id']}",
+        headers=partner_header,
+        json={"status": "fulfilled"},
+    )
+    assert partner_fulfill.status_code == 403
+
+    fulfilled = client.patch(
+        f"/api/rewards/redemptions/{red_dragon['id']}",
+        headers=auth_header,
+        json={"status": "fulfilled"},
+    )
+    assert fulfilled.status_code == 200
+
+    couple = client.get(
+        "/api/rewards/redemptions",
+        headers=auth_header,
+        params={"scope": "couple"},
+    ).json()
+    by_id = {x["id"]: x for x in couple}
+    assert red_dragon["id"] in by_id and by_id[red_dragon["id"]]["status"] == "fulfilled"
+    assert red_leaf["id"] in by_id and by_id[red_leaf["id"]]["status"] == "pending"
+    assert len(couple) == 2

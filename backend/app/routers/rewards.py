@@ -19,6 +19,7 @@ router = APIRouter()
 REWARD_CATEGORIES = frozenset({"food", "fun", "intimacy", "adult"})
 RewardCategory = Literal["food", "fun", "intimacy", "adult"]
 ListScope = Literal["listed", "pending_review_for_me", "mine"]
+RedemptionListScope = Literal["couple"]
 
 
 class RewardCreate(BaseModel):
@@ -358,6 +359,36 @@ def _redemption_to_out(r: Redemption, reward_title: str | None = None) -> Redemp
     )
 
 
+def _redemptions_with_titles(db: Session, rows: list[Redemption]) -> list[RedemptionOut]:
+    out: list[RedemptionOut] = []
+    for r in rows:
+        reward = db.get(Reward, r.reward_id)
+        title = reward.title if reward else None
+        out.append(_redemption_to_out(r, title))
+    return out
+
+
+@router.get("/redemptions")
+def list_redemptions(
+    scope: RedemptionListScope = Query(default="couple"),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[RedemptionOut]:
+    _ = user
+    if scope != "couple":
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid scope")
+    rows = (
+        db.query(Redemption)
+        .filter(
+            Redemption.redeemer_user_id.in_(_allowed_user_ids()),
+            Redemption.status.in_(("pending", "fulfilled")),
+        )
+        .order_by(Redemption.created_at.desc())
+        .all()
+    )
+    return _redemptions_with_titles(db, rows)
+
+
 @router.get("/redemptions/mine")
 def my_redemptions(
     user: User = Depends(get_current_user),
@@ -369,12 +400,7 @@ def my_redemptions(
         .order_by(Redemption.created_at.desc())
         .all()
     )
-    out = []
-    for r in rows:
-        reward = db.get(Reward, r.reward_id)
-        title = reward.title if reward else None
-        out.append(_redemption_to_out(r, title))
-    return out
+    return _redemptions_with_titles(db, rows)
 
 
 @router.patch("/redemptions/{redemption_id}")
@@ -389,21 +415,20 @@ def patch_redemption(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Redemption not found")
     if body.status not in ("fulfilled", "cancelled"):
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid status")
+    if body.status == "cancelled":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cancellation and refunds are not supported",
+        )
     if r.status != "pending":
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Redemption not pending")
-    if body.status == "fulfilled":
-        r.status = "fulfilled"
-        r.fulfilled_at = datetime.utcnow()
-    else:
-        r.status = "cancelled"
-        grant(
-            db,
-            r.redeemer_user_id,
-            r.points_spent,
-            "redeem_refund",
-            f"redeem_refund:{r.id}",
-            meta={"redemption_id": r.id},
+    if r.redeemer_user_id != user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the redeemer can mark fulfilled",
         )
+    r.status = "fulfilled"
+    r.fulfilled_at = datetime.utcnow()
     db.commit()
     db.refresh(r)
     reward = db.get(Reward, r.reward_id)
