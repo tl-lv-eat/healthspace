@@ -42,6 +42,11 @@ const router = createRouter({
       component: () => import('@/views/SettingsView.vue'),
     },
     {
+      path: '/mall-admin',
+      name: 'mall-admin',
+      component: () => import('@/views/MallAdminView.vue'),
+    },
+    {
       path: '/',
       component: TabLayout,
       redirect: '/today',
