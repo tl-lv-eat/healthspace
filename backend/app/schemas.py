@@ -59,3 +59,28 @@ class MealOut(BaseModel):
     created_at: str
 
     model_config = {"from_attributes": True}
+
+
+class WaterCreate(BaseModel):
+    date: str
+    amount_ml: int
+
+
+class WaterPatch(BaseModel):
+    amount_ml: int
+
+
+class WaterEntryOut(BaseModel):
+    id: int
+    user_id: str
+    date: str
+    amount_ml: int
+    created_at: str
+
+    model_config = {"from_attributes": True}
+
+
+class WaterDayOut(BaseModel):
+    target_ml: int
+    total_ml: int
+    entries: list[WaterEntryOut]
