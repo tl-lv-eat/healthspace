@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -22,6 +22,8 @@ class User(Base):
     meals: Mapped[list[Meal]] = relationship(back_populates="user")
     water_entries: Mapped[list[WaterEntry]] = relationship(back_populates="user")
     workouts: Mapped[list[Workout]] = relationship(back_populates="user")
+    body_metrics: Mapped[list["BodyMetric"]] = relationship(back_populates="user")
+    week_plans: Mapped[list["WeekPlan"]] = relationship(back_populates="user")
 
 
 class Meal(Base):
@@ -64,6 +66,40 @@ class Workout(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
     user: Mapped[User] = relationship(back_populates="workouts")
+
+
+class BodyMetric(Base):
+    __tablename__ = "body_metrics"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(32), ForeignKey("users.id"), nullable=False, index=True)
+    recorded_on: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
+    weight_kg: Mapped[float | None] = mapped_column(Float, nullable=True)
+    waist_cm: Mapped[float | None] = mapped_column(Float, nullable=True)
+    body_fat_pct: Mapped[float | None] = mapped_column(Float, nullable=True)
+    chest_cm: Mapped[float | None] = mapped_column(Float, nullable=True)
+    hip_cm: Mapped[float | None] = mapped_column(Float, nullable=True)
+    height_cm: Mapped[float | None] = mapped_column(Float, nullable=True)
+    note: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+    user: Mapped[User] = relationship(back_populates="body_metrics")
+
+
+class WeekPlan(Base):
+    __tablename__ = "week_plans"
+    __table_args__ = (UniqueConstraint("user_id", "week_start", name="uq_week_plan_user_week"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(32), ForeignKey("users.id"), nullable=False, index=True)
+    week_start: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
+    water_target_ml: Mapped[int] = mapped_column(Integer, nullable=False, default=2000)
+    meal_mode: Mapped[str] = mapped_column(String(32), nullable=False, default="three_main")
+    workout_mode: Mapped[str] = mapped_column(String(32), nullable=False, default="any")
+    workout_cardio_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    workout_strength_sets: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+    user: Mapped[User] = relationship(back_populates="week_plans")
 
 
 class Exercise(Base):

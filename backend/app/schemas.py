@@ -120,6 +120,52 @@ class ExerciseCreate(BaseModel):
     gif_url: str = ""
 
 
+class BodyMetricCreate(BaseModel):
+    recorded_on: str
+    weight_kg: float | None = None
+    waist_cm: float | None = None
+    body_fat_pct: float | None = None
+    chest_cm: float | None = None
+    hip_cm: float | None = None
+    height_cm: float | None = None
+    note: str = ""
+
+
+class BodyMetricOut(BaseModel):
+    id: int
+    user_id: str
+    recorded_on: str
+    weight_kg: float | None
+    waist_cm: float | None
+    body_fat_pct: float | None
+    chest_cm: float | None
+    hip_cm: float | None
+    height_cm: float | None
+    note: str
+    created_at: str
+    bmi: float | None = None
+
+
+class WeekPlanUpsert(BaseModel):
+    week_start: str
+    water_target_ml: int
+    meal_mode: str = "three_main"
+    workout_mode: str = "any"
+    workout_cardio_min: int | None = None
+    workout_strength_sets: int | None = None
+
+
+class WeekPlanOut(BaseModel):
+    id: int | None
+    user_id: str
+    week_start: str
+    water_target_ml: int
+    meal_mode: str
+    workout_mode: str
+    workout_cardio_min: int | None = None
+    workout_strength_sets: int | None = None
+
+
 class ExerciseOut(BaseModel):
     id: int
     slug: str
