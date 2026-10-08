@@ -1,4 +1,4 @@
-from backend.app.models import User
+from backend.app.models import BodyMetric, User
 from backend.app.services.energy import (
     daily_energy_snapshot,
     estimate_workout_burn_kcal,
@@ -32,6 +32,28 @@ def test_resolve_body_profile_prefers_user_fields(db_session, client):
     p = resolve_body_profile(u, db_session)
     assert p["sex"] == "female"
     assert p["age"] == 35
+
+
+def test_resolve_body_profile_uses_body_metric_weight_height(db_session, client):
+    u = db_session.get(User, "dragon")
+    assert u is not None
+    u.sex = "female"
+    u.age = 35
+    db_session.add(
+        BodyMetric(
+            user_id="dragon",
+            recorded_on="2026-10-01",
+            weight_kg=82.5,
+            height_cm=180.0,
+        )
+    )
+    db_session.commit()
+    db_session.refresh(u)
+    p = resolve_body_profile(u, db_session)
+    assert p["sex"] == "female"
+    assert p["age"] == 35
+    assert p["weight_kg"] == 82.5
+    assert p["height_cm"] == 180.0
 
 
 def test_bmr_male_female():
