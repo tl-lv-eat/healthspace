@@ -16,12 +16,12 @@ app:
   users:
     - id: dragon
       password: dragon-pass
-      display_name: "🐉"
+      display_name: "龙龙"
       default_water_ml: 2000
       role: member
     - id: leaf
       password: leaf-pass
-      display_name: "🍃"
+      display_name: "叶子"
       default_water_ml: 2000
       role: member
 """
@@ -97,3 +97,9 @@ def leaf_auth_header(client) -> dict[str, str]:
     assert r.status_code == 200
     token = r.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def partner_header(leaf_auth_header) -> dict[str, str]:
+    """Partner (leaf) auth — dragon's counterpart for review flows."""
+    return leaf_auth_header

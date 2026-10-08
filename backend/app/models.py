@@ -173,7 +173,12 @@ class Reward(Base):
     scale_level: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     cost_note: Mapped[str] = mapped_column(String(256), nullable=False, default="")
     points_price: Mapped[int] = mapped_column(Integer, nullable=False)
-    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    category: Mapped[str] = mapped_column(String(32), nullable=False, default="food")
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="pending_review")
+    reject_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    reviewed_by: Mapped[str | None] = mapped_column(String(32), ForeignKey("users.id"), nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
 

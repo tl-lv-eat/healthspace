@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -15,6 +16,10 @@ from backend.app.settings import get_settings
 
 router = APIRouter()
 
+REWARD_CATEGORIES = frozenset({"food", "fun", "intimacy", "adult"})
+RewardCategory = Literal["food", "fun", "intimacy", "adult"]
+ListScope = Literal["listed", "pending_review_for_me", "mine"]
+
 
 class RewardCreate(BaseModel):
     title: str
@@ -23,6 +28,7 @@ class RewardCreate(BaseModel):
     scale_level: int = Field(default=1, ge=1, le=5)
     cost_note: str = ""
     points_price: int = Field(..., gt=0)
+    category: RewardCategory
 
 
 class RewardPatch(BaseModel):
@@ -32,7 +38,12 @@ class RewardPatch(BaseModel):
     scale_level: int | None = Field(default=None, ge=1, le=5)
     cost_note: str | None = None
     points_price: int | None = Field(default=None, gt=0)
+    category: RewardCategory | None = None
     active: bool | None = None
+
+
+class RejectBody(BaseModel):
+    reason: str = Field(..., min_length=1)
 
 
 class RedemptionPatch(BaseModel):
@@ -48,6 +59,11 @@ class RewardOut(BaseModel):
     scale_level: int
     cost_note: str
     points_price: int
+    category: str
+    status: str
+    reject_reason: str | None
+    reviewed_by: str | None
+    reviewed_at: str | None
     active: bool
     created_at: str
 
@@ -63,11 +79,26 @@ class RedemptionOut(BaseModel):
     reward_title: str | None = None
 
 
+def _allowed_user_ids() -> frozenset[str]:
+    return frozenset(u.id for u in get_settings().users)
+
+
+def _sync_active(row: Reward) -> None:
+    row.active = row.status == "listed"
+
+
 def _reward_to_out(row: Reward, *, reveal: bool = False) -> RewardOut:
     created = row.created_at.isoformat() if isinstance(row.created_at, datetime) else str(row.created_at)
     desc: str | None = row.description
     if row.is_private and not reveal:
         desc = None
+    reviewed_at = None
+    if row.reviewed_at is not None:
+        reviewed_at = (
+            row.reviewed_at.isoformat()
+            if isinstance(row.reviewed_at, datetime)
+            else str(row.reviewed_at)
+        )
     return RewardOut(
         id=row.id,
         creator_user_id=row.creator_user_id,
@@ -77,28 +108,48 @@ def _reward_to_out(row: Reward, *, reveal: bool = False) -> RewardOut:
         scale_level=row.scale_level,
         cost_note=row.cost_note,
         points_price=row.points_price,
+        category=row.category,
+        status=row.status,
+        reject_reason=row.reject_reason,
+        reviewed_by=row.reviewed_by,
+        reviewed_at=reviewed_at,
         active=row.active,
         created_at=created,
     )
 
 
-def _allowed_user_ids() -> frozenset[str]:
-    return frozenset(u.id for u in get_settings().users)
+def _get_reward_or_404(db: Session, reward_id: int) -> Reward:
+    row = db.get(Reward, reward_id)
+    if row is None or row.creator_user_id not in _allowed_user_ids():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reward not found")
+    return row
 
 
 @router.get("")
 def list_rewards(
+    scope: ListScope = Query(default="listed"),
+    category: RewardCategory | None = Query(default=None),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> list[RewardOut]:
-    _ = user
-    rows = (
-        db.query(Reward)
-        .filter(Reward.creator_user_id.in_(_allowed_user_ids()), Reward.active.is_(True))
-        .order_by(Reward.created_at.desc())
-        .all()
-    )
-    return [_reward_to_out(r) for r in rows]
+    q = db.query(Reward).filter(Reward.creator_user_id.in_(_allowed_user_ids()))
+    if scope == "listed":
+        q = q.filter(Reward.status == "listed")
+    elif scope == "pending_review_for_me":
+        q = q.filter(
+            Reward.status == "pending_review",
+            Reward.creator_user_id != user.id,
+        )
+    elif scope == "mine":
+        q = q.filter(
+            Reward.creator_user_id == user.id,
+            Reward.status.in_(("pending_review", "rejected")),
+        )
+    if category is not None:
+        q = q.filter(Reward.category == category)
+    rows = q.order_by(Reward.created_at.desc()).all()
+    reveal = scope == "mine"
+    return [_reward_to_out(r, reveal=reveal) for r in rows]
 
 
 @router.post("")
@@ -107,6 +158,8 @@ def create_reward(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> RewardOut:
+    if body.category not in REWARD_CATEGORIES:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid category")
     row = Reward(
         creator_user_id=user.id,
         title=body.title.strip(),
@@ -115,6 +168,9 @@ def create_reward(
         scale_level=body.scale_level,
         cost_note=body.cost_note,
         points_price=body.points_price,
+        category=body.category,
+        status="pending_review",
+        active=False,
     )
     db.add(row)
     db.commit()
@@ -129,11 +185,11 @@ def patch_reward(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> RewardOut:
-    row = db.get(Reward, reward_id)
-    if row is None or row.creator_user_id not in _allowed_user_ids():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reward not found")
+    row = _get_reward_or_404(db, reward_id)
     if row.creator_user_id != user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your reward")
+    if row.status not in ("pending_review", "rejected", "listed"):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Reward not editable")
     if body.title is not None:
         row.title = body.title.strip()
     if body.description is not None:
@@ -146,8 +202,99 @@ def patch_reward(
         row.cost_note = body.cost_note
     if body.points_price is not None:
         row.points_price = body.points_price
+    if body.category is not None:
+        row.category = body.category
     if body.active is not None:
-        row.active = body.active
+        if body.active is False and row.status == "listed":
+            row.status = "archived"
+        elif body.active is True and row.status == "archived":
+            row.status = "pending_review"
+            row.reject_reason = None
+            row.reviewed_by = None
+            row.reviewed_at = None
+        _sync_active(row)
+    db.commit()
+    db.refresh(row)
+    return _reward_to_out(row, reveal=True)
+
+
+@router.post("/{reward_id}/approve")
+def approve_reward(
+    reward_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RewardOut:
+    row = _get_reward_or_404(db, reward_id)
+    if row.creator_user_id == user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot review own reward")
+    if row.status != "pending_review":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Reward not pending review")
+    row.status = "listed"
+    row.reject_reason = None
+    row.reviewed_by = user.id
+    row.reviewed_at = datetime.utcnow()
+    _sync_active(row)
+    db.commit()
+    db.refresh(row)
+    return _reward_to_out(row, reveal=True)
+
+
+@router.post("/{reward_id}/reject")
+def reject_reward(
+    reward_id: int,
+    body: RejectBody,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RewardOut:
+    row = _get_reward_or_404(db, reward_id)
+    if row.creator_user_id == user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot review own reward")
+    if row.status != "pending_review":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Reward not pending review")
+    row.status = "rejected"
+    row.reject_reason = body.reason.strip()
+    row.reviewed_by = user.id
+    row.reviewed_at = datetime.utcnow()
+    _sync_active(row)
+    db.commit()
+    db.refresh(row)
+    return _reward_to_out(row, reveal=True)
+
+
+@router.post("/{reward_id}/resubmit")
+def resubmit_reward(
+    reward_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RewardOut:
+    row = _get_reward_or_404(db, reward_id)
+    if row.creator_user_id != user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your reward")
+    if row.status != "rejected":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Reward not rejected")
+    row.status = "pending_review"
+    row.reject_reason = None
+    row.reviewed_by = None
+    row.reviewed_at = None
+    _sync_active(row)
+    db.commit()
+    db.refresh(row)
+    return _reward_to_out(row, reveal=True)
+
+
+@router.post("/{reward_id}/archive")
+def archive_reward(
+    reward_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RewardOut:
+    row = _get_reward_or_404(db, reward_id)
+    if row.creator_user_id != user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your reward")
+    if row.status != "listed":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Reward not listed")
+    row.status = "archived"
+    _sync_active(row)
     db.commit()
     db.refresh(row)
     return _reward_to_out(row, reveal=True)
@@ -160,8 +307,8 @@ def reveal_reward(
     db: Session = Depends(get_db),
 ) -> dict:
     _ = user
-    row = db.get(Reward, reward_id)
-    if row is None or row.creator_user_id not in _allowed_user_ids():
+    row = _get_reward_or_404(db, reward_id)
+    if row.status != "listed":
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reward not found")
     return {"description": row.description}
 
@@ -172,9 +319,9 @@ def redeem_reward(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> RedemptionOut:
-    row = db.get(Reward, reward_id)
-    if row is None or not row.active or row.creator_user_id not in _allowed_user_ids():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reward not found")
+    row = _get_reward_or_404(db, reward_id)
+    if row.status != "listed":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Reward not listed")
     price = row.points_price
     if get_balance(db, user.id) < price:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Insufficient points")
@@ -237,7 +384,6 @@ def patch_redemption(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> RedemptionOut:
-    _ = user
     r = db.get(Redemption, redemption_id)
     if r is None or r.redeemer_user_id not in _allowed_user_ids():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Redemption not found")

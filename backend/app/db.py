@@ -124,10 +124,44 @@ def _ensure_week_plan_columns() -> None:
                 pass
 
 
+def _ensure_reward_mall_columns() -> None:
+    """SQLite additive migrate for reward category + review workflow."""
+    if not str(engine.url).startswith("sqlite"):
+        return
+    with engine.begin() as conn:
+        rows = conn.exec_driver_sql("PRAGMA table_info(rewards)").fetchall()
+        existing = {r[1] for r in rows}
+        alters = []
+        if "category" not in existing:
+            alters.append("ALTER TABLE rewards ADD COLUMN category VARCHAR(32) NOT NULL DEFAULT 'food'")
+        if "status" not in existing:
+            alters.append(
+                "ALTER TABLE rewards ADD COLUMN status VARCHAR(32) NOT NULL DEFAULT 'pending_review'"
+            )
+        if "reject_reason" not in existing:
+            alters.append("ALTER TABLE rewards ADD COLUMN reject_reason TEXT")
+        if "reviewed_by" not in existing:
+            alters.append("ALTER TABLE rewards ADD COLUMN reviewed_by VARCHAR(32)")
+        if "reviewed_at" not in existing:
+            alters.append("ALTER TABLE rewards ADD COLUMN reviewed_at DATETIME")
+        for sql in alters:
+            conn.exec_driver_sql(sql)
+        if "status" in existing or any("status" in a for a in alters):
+            conn.exec_driver_sql(
+                "UPDATE rewards SET status = 'listed', active = 1 "
+                "WHERE (status IS NULL OR status = 'pending_review') AND active = 1"
+            )
+            conn.exec_driver_sql(
+                "UPDATE rewards SET status = 'archived', active = 0 "
+                "WHERE (status IS NULL OR status = 'pending_review') AND active = 0"
+            )
+
+
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
     _ensure_user_profile_columns()
     _ensure_week_plan_columns()
+    _ensure_reward_mall_columns()
     settings = get_settings()
     with SessionLocal() as db:
         for user_cfg in settings.users:
