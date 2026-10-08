@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
         sched.shutdown(wait=False)
 
 
-app = FastAPI(title="双人减", lifespan=lifespan)
+app = FastAPI(title="健康space🐉🍃", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

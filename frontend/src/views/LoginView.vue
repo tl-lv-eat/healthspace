@@ -2,40 +2,27 @@
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showFailToast, showLoadingToast, closeToast } from 'vant'
+import { PERSONAS, type PersonaId } from '@/constants/personas'
 import { useAuthStore } from '@/stores/auth'
-
-const USERS = [
-  { id: 'dragon', emoji: '🐉', label: 'Dragon', hint: '男方' },
-  { id: 'leaf', emoji: '🍃', label: 'Leaf', hint: '女方' },
-] as const
 
 const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 
-const selectedId = ref<(typeof USERS)[number]['id'] | null>(null)
-const password = ref('')
 const loading = ref(false)
 
-async function onSubmit() {
-  if (!selectedId.value) {
-    showFailToast('请选择账号')
-    return
-  }
-  if (!password.value) {
-    showFailToast('请输入密码')
-    return
-  }
+async function pick(id: PersonaId) {
+  if (loading.value) return
   loading.value = true
-  showLoadingToast({ message: '登录中…', forbidClick: true, duration: 0 })
+  showLoadingToast({ message: '进入中…', forbidClick: true, duration: 0 })
   try {
-    await auth.login(selectedId.value, password.value)
+    await auth.select(id)
     closeToast()
     const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/today'
     await router.replace(redirect)
   } catch {
     closeToast()
-    showFailToast('密码错误或网络异常')
+    showFailToast('进入失败，请重试')
   } finally {
     loading.value = false
   }
@@ -45,45 +32,24 @@ async function onSubmit() {
 <template>
   <div class="login">
     <div class="login__hero">
-      <p class="login__eyebrow">COUPLE FITNESS</p>
-      <h1 class="login__brand">双人减</h1>
-      <p class="login__tagline">饮食 · 饮水 · 训练，和 TA 一起推进</p>
+      <p class="login__eyebrow">龙龙 × 叶子</p>
+      <h1 class="login__brand">健康space🐉🍃</h1>
+      <p class="login__tagline">选一下现在是谁在记</p>
     </div>
 
     <div class="login__pick">
       <button
-        v-for="u in USERS"
+        v-for="u in PERSONAS"
         :key="u.id"
         type="button"
         class="persona"
-        :class="{ 'persona--on': selectedId === u.id, [`persona--${u.id}`]: true }"
-        @click="selectedId = u.id"
+        :class="[`persona--${u.id}`]"
+        :disabled="loading"
+        @click="pick(u.id)"
       >
         <span class="persona__emoji">{{ u.emoji }}</span>
         <span class="persona__label">{{ u.label }}</span>
-        <span class="persona__hint">{{ u.hint }}</span>
       </button>
-    </div>
-
-    <div class="login__sheet fit-card">
-      <label class="login__field-label">密码</label>
-      <van-field
-        v-model="password"
-        type="password"
-        placeholder="输入密码进入"
-        autocomplete="current-password"
-        class="login__field"
-        @keyup.enter="onSubmit"
-      />
-      <van-button
-        type="primary"
-        block
-        class="login__cta"
-        :loading="loading"
-        @click="onSubmit"
-      >
-        Start Today
-      </van-button>
     </div>
   </div>
 </template>
@@ -91,20 +57,20 @@ async function onSubmit() {
 <style scoped>
 .login {
   min-height: 100vh;
-  padding: 56px 22px 32px;
+  padding: 56px 22px 40px;
   display: flex;
   flex-direction: column;
 }
 
 .login__hero {
-  margin-bottom: 36px;
+  margin-bottom: 40px;
 }
 
 .login__eyebrow {
   margin: 0 0 10px;
   font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.14em;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   color: var(--primary-dark);
 }
 
@@ -121,14 +87,12 @@ async function onSubmit() {
   font-size: 15px;
   color: var(--muted);
   font-weight: 500;
-  max-width: 16em;
 }
 
 .login__pick {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 14px;
 }
 
 .persona {
@@ -136,81 +100,49 @@ async function onSubmit() {
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
-  min-height: 132px;
-  padding: 18px 16px;
+  min-height: 160px;
+  padding: 22px 18px;
   border: 2px solid transparent;
   border-radius: var(--radius);
   background: var(--card);
   box-shadow: var(--shadow-sm);
   cursor: pointer;
   text-align: left;
+  font: inherit;
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
-.persona--on {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
+.persona:disabled {
+  opacity: 0.7;
+  cursor: wait;
 }
 
-.persona--dragon.persona--on {
-  border-color: #ff8787;
-  background: linear-gradient(160deg, #fff 40%, var(--cal-soft));
+.persona:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
-.persona--leaf.persona--on {
-  border-color: var(--primary);
-  background: linear-gradient(160deg, #fff 40%, var(--primary-soft));
+.persona--dragon {
+  border-color: rgba(232, 196, 138, 0.45);
+  background: linear-gradient(160deg, #1a1c22 20%, #12141a);
+  color: #f3efe8;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+.persona--leaf {
+  border-color: rgba(232, 93, 142, 0.4);
+  background: linear-gradient(160deg, #fff 30%, #fce4ee);
+  color: #2a1820;
+  box-shadow: 0 14px 36px rgba(200, 80, 120, 0.12);
 }
 
 .persona__emoji {
-  font-size: 2.2rem;
+  font-size: 2.4rem;
   line-height: 1;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .persona__label {
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-  font-weight: 700;
-}
-
-.persona__hint {
-  font-size: 12px;
-  color: var(--muted);
-  font-weight: 600;
-}
-
-.login__sheet {
-  padding: 20px 18px 18px;
-  margin-top: auto;
-}
-
-.login__field-label {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.login__field {
-  margin-bottom: 16px;
-  padding: 4px 12px;
-  background: var(--bg);
-  border-radius: 14px;
-}
-
-.login__field :deep(.van-cell) {
-  background: transparent;
-  padding: 8px 0;
-}
-
-.login__cta {
-  height: 48px !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.02em;
-  border-radius: 14px !important;
+  font-size: 1.2rem;
+  font-weight: 800;
 }
 </style>

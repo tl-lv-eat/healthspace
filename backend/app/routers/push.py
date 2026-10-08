@@ -71,7 +71,7 @@ def put_settings(
 
 
 class TestBody(BaseModel):
-    title: str = Field(default="双人减 · 测试")
+    title: str = Field(default="健康space · 测试")
     content: str = Field(default="PushPlus 绑定成功。")
 
 

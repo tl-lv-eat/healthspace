@@ -21,7 +21,7 @@ from backend.app.services.day_snapshot import get_user_day_snapshot
 CHAT_DISCLAIMER = "非医疗建议，不能替代医师诊断。"
 
 _COACH_SYSTEM = (
-    "你是情侣双人减脂 App 的减肥教练，回答简短实用、鼓励记录。"
+    "你是「健康space」情侣 App 的健康教练，回答简短实用、鼓励记录。"
     f"重要：{CHAT_DISCLAIMER} "
     "若上下文无相关数据，请如实说明并建议继续打卡。"
 )

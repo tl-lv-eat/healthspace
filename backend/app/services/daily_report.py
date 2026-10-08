@@ -20,7 +20,7 @@ from backend.app.services.context_summary import build_user_day_blob, build_user
 from backend.app.services.day_snapshot import get_user_day_snapshot
 
 _SYSTEM = (
-    "你是温和专业的减肥教练，为情侣双人减脂 App 写日终分析。"
+    "你是温和专业的健康教练，为「健康space」情侣 App 写日终分析。"
     "只输出 Markdown，包含三个二级标题：## 今日小结、## 本周趋势、## 明日建议。"
     "语气鼓励、具体可执行，不编造没有的数据。"
 )

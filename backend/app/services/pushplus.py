@@ -89,7 +89,7 @@ def run_reminders_now(db: Session, *, hour: int | None = None) -> None:
             continue
 
         lines = _incomplete_lines(done)
-        title = "双人减 · 今日提醒"
+        title = "健康space · 今日提醒"
         content = f"{today}\n" + "\n".join(f"· {line}" for line in lines)
 
         try:

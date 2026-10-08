@@ -19,7 +19,7 @@ def main() -> int:
     parser.add_argument("--token", required=True)
     args = parser.parse_args()
     try:
-        send_pushplus(args.token, "双人减 · 测试", "Smoke test OK")
+        send_pushplus(args.token, "健康space · 测试", "Smoke test OK")
     except PushPlusError as exc:
         print(f"Failed: {exc}", file=sys.stderr)
         return 1

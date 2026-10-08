@@ -260,6 +260,25 @@ git commit -m "feat: settings points rules and strength duration"
 
 ---
 
+### Task 10b: Achievements (Mine)
+
+**Files:**
+- Create: `backend/app/models.py` Achievement + UserAchievement
+- Create: `backend/app/routers/achievements.py`, `backend/app/services/achievement_eval.py`
+- Create: `frontend/src/views/AchievementsView.vue`；`MineView` 入口
+- Seed shared + persona (BMI/体脂) defaults；claim endpoint grants points idempotently
+
+- [ ] List mine: incomplete / claimable / claimed  
+- [ ] POST claim when claimable  
+- [ ] CRUD admin for catalog (couple editable)  
+- [ ] Tests for eval + claim; commit
+
+```bash
+git commit -m "feat: achievements in mine with claimable points"
+```
+
+---
+
 ### Task 11: Full verification
 
 - [ ] `pytest backend/tests -q --tb=line`  

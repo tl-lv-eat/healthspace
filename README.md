@@ -1,6 +1,6 @@
-# 双人减
+# 健康space🐉🍃
 
-情侣双人减肥/健康记录 H5（Vue3 + FastAPI + SQLite）。
+情侣健康记录 H5（Vue3 + FastAPI + SQLite）。原名「双人减」。
 
 ## 分期状态
 
@@ -32,8 +32,8 @@ cp config.example.yaml config.yaml
 
 | 用户 id | 展示名 | 示例密码（见 config.example.yaml） |
 |---------|--------|-----------------------------------|
-| `dragon` | 🐉 | `dragon-pass` |
-| `leaf` | 🍃 | `leaf-pass` |
+| `dragon` | 龙龙（🐉） | `dragon-pass`（仅兼容旧 login；入口已改为无密码选人） |
+| `leaf` | 叶子（🍃） | `leaf-pass` |
 
 ### 2. 后端依赖与数据
 
