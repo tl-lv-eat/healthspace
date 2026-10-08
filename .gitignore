@@ -8,3 +8,4 @@ __pycache__/
 config.local.yaml
 .pytest_cache/
 *.pyc
+.superpowers/
