@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from backend.app.models import Achievement, Base, User
+from backend.app.models import Achievement, Base, Reward, User
 from backend.app.settings import get_settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -252,6 +252,117 @@ def _seed_default_achievements(db: Session) -> None:
         )
 
 
+# System mall seeds — already listed (skip partner review). cost_note holds seed key.
+_DEFAULT_REWARDS: list[dict] = [
+    {
+        "seed_key": "seed:milk_tea",
+        "title": "奶茶自由一次",
+        "description": "任选一杯日常奶茶/咖啡，快乐续命。",
+        "category": "food",
+        "points_price": 12,
+        "scale_level": 1,
+        "creator_user_id": "dragon",
+        "reviewed_by": "leaf",
+    },
+    {
+        "seed_key": "seed:nice_dinner",
+        "title": "双人像样晚餐",
+        "description": "一起吃一顿不赶时间的正经晚饭（外卖或下馆子都行）。",
+        "category": "food",
+        "points_price": 35,
+        "scale_level": 2,
+        "creator_user_id": "leaf",
+        "reviewed_by": "dragon",
+    },
+    {
+        "seed_key": "seed:movie_night",
+        "title": "电影之夜",
+        "description": "电影院或家投影，选一部双方都想看的片，零食自备。",
+        "category": "fun",
+        "points_price": 20,
+        "scale_level": 2,
+        "creator_user_id": "dragon",
+        "reviewed_by": "leaf",
+    },
+    {
+        "seed_key": "seed:day_trip",
+        "title": "半日小出行",
+        "description": "城市周边走走：公园、展览、逛街，不赶通宵。",
+        "category": "fun",
+        "points_price": 45,
+        "scale_level": 3,
+        "creator_user_id": "leaf",
+        "reviewed_by": "dragon",
+    },
+    {
+        "seed_key": "seed:massage",
+        "title": "肩颈按摩 15 分钟",
+        "description": "对方提供肩颈/背部放松按摩约一刻钟。",
+        "category": "intimacy",
+        "points_price": 18,
+        "scale_level": 2,
+        "creator_user_id": "dragon",
+        "reviewed_by": "leaf",
+    },
+    {
+        "seed_key": "seed:cuddle_movie",
+        "title": "依偎看剧一晚",
+        "description": "关掉手机工作通知，抱着看一晚剧/综艺。",
+        "category": "intimacy",
+        "points_price": 15,
+        "scale_level": 1,
+        "creator_user_id": "leaf",
+        "reviewed_by": "dragon",
+    },
+    {
+        "seed_key": "seed:adult_wish",
+        "title": "一夜所愿（双方协商）",
+        "description": "在双方都同意的前提下，兑现一次私下约定的亲密愿望。",
+        "category": "adult",
+        "points_price": 60,
+        "scale_level": 4,
+        "is_private": True,
+        "creator_user_id": "dragon",
+        "reviewed_by": "leaf",
+    },
+    {
+        "seed_key": "seed:breakfast_bed",
+        "title": "床边早餐投喂",
+        "description": "对方做好/买好早餐送到床边，不许催起床干活。",
+        "category": "food",
+        "points_price": 22,
+        "scale_level": 2,
+        "creator_user_id": "leaf",
+        "reviewed_by": "dragon",
+    },
+]
+
+
+def _seed_default_rewards(db: Session) -> None:
+    from datetime import datetime
+
+    for spec in _DEFAULT_REWARDS:
+        key = spec["seed_key"]
+        if db.query(Reward).filter(Reward.cost_note == key).first():
+            continue
+        db.add(
+            Reward(
+                creator_user_id=spec["creator_user_id"],
+                title=spec["title"],
+                description=spec["description"],
+                is_private=bool(spec.get("is_private", False)),
+                scale_level=int(spec.get("scale_level", 1)),
+                cost_note=key,
+                points_price=int(spec["points_price"]),
+                category=spec["category"],
+                status="listed",
+                active=True,
+                reviewed_by=spec["reviewed_by"],
+                reviewed_at=datetime.utcnow(),
+            )
+        )
+
+
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
     _ensure_user_profile_columns()
@@ -277,4 +388,5 @@ def init_db() -> None:
             if existing.display_name in legacy:
                 existing.display_name = user_cfg.display_name
         _seed_default_achievements(db)
+        _seed_default_rewards(db)
         db.commit()
