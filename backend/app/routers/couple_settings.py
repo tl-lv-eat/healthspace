@@ -1,16 +1,18 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import date
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from backend.app.auth import get_current_user
 from backend.app.db import get_db
 from backend.app.models import CoupleSettings, User
+from backend.app.services.couple_settings_service import get_or_create_couple_settings
+from backend.app.services.settlement import settle_daily_for_date
 
 router = APIRouter()
-
-COUPLE_SETTINGS_ID = 1
 
 
 class CoupleSettingsOut(BaseModel):
@@ -45,16 +47,6 @@ def _row_to_out(row: CoupleSettings) -> CoupleSettingsOut:
     )
 
 
-def get_or_create_couple_settings(db: Session) -> CoupleSettings:
-    row = db.get(CoupleSettings, COUPLE_SETTINGS_ID)
-    if row is None:
-        row = CoupleSettings(id=COUPLE_SETTINGS_ID)
-        db.add(row)
-        db.commit()
-        db.refresh(row)
-    return row
-
-
 @router.get("")
 def get_couple_settings(
     user: User = Depends(get_current_user),
@@ -80,3 +72,17 @@ def patch_couple_settings(
     db.commit()
     db.refresh(row)
     return _row_to_out(row)
+
+
+@router.post("/settle")
+def settle_daily(
+    day: str = Query(..., alias="date", description="Calendar day to settle (YYYY-MM-DD)"),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict:
+    _ = user
+    try:
+        settle_day = date.fromisoformat(day)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="invalid date") from exc
+    return settle_daily_for_date(db, settle_day)
