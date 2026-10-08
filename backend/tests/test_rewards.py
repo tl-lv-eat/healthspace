@@ -217,3 +217,23 @@ def test_couple_redemptions_scope_and_redeemer_fulfill(
     assert red_dragon["id"] in by_id and by_id[red_dragon["id"]]["status"] == "fulfilled"
     assert red_leaf["id"] in by_id and by_id[red_leaf["id"]]["status"] == "pending"
     assert len(couple) == 2
+
+
+def test_reward_catalog_scope_listed_and_archived(client, auth_header, partner_header):
+    pending = _create_reward(client, auth_header, title="待审", category="food")
+    listed = _create_reward(client, auth_header, title="上架", category="fun")
+    _approve(client, partner_header, listed["id"])
+    archived = _create_reward(client, auth_header, title="下架", category="food")
+    _approve(client, partner_header, archived["id"])
+    ar = client.post(f"/api/rewards/{archived['id']}/archive", headers=auth_header)
+    assert ar.status_code == 200
+
+    cat = client.get("/api/rewards", headers=partner_header, params={"scope": "catalog"})
+    assert cat.status_code == 200
+    ids = {x["id"] for x in cat.json()}
+    assert listed["id"] in ids
+    assert archived["id"] in ids
+    assert pending["id"] not in ids
+    statuses = {x["id"]: x["status"] for x in cat.json()}
+    assert statuses[listed["id"]] == "listed"
+    assert statuses[archived["id"]] == "archived"

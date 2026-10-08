@@ -18,7 +18,7 @@ router = APIRouter()
 
 REWARD_CATEGORIES = frozenset({"food", "fun", "intimacy", "adult"})
 RewardCategory = Literal["food", "fun", "intimacy", "adult"]
-ListScope = Literal["listed", "pending_review_for_me", "mine"]
+ListScope = Literal["listed", "pending_review_for_me", "mine", "catalog"]
 RedemptionListScope = Literal["couple"]
 
 
@@ -146,10 +146,12 @@ def list_rewards(
             Reward.creator_user_id == user.id,
             Reward.status.in_(("pending_review", "rejected")),
         )
+    elif scope == "catalog":
+        q = q.filter(Reward.status.in_(("listed", "archived")))
     if category is not None:
         q = q.filter(Reward.category == category)
     rows = q.order_by(Reward.created_at.desc()).all()
-    reveal = scope == "mine"
+    reveal = scope in ("mine", "catalog")
     return [_reward_to_out(r, reveal=reveal) for r in rows]
 
 
