@@ -19,6 +19,8 @@ function logout() {
       <p class="mine__id">@{{ auth.user?.id ?? '—' }}</p>
     </header>
 
+    <router-link to="/body" class="mine__link fit-card">身体数据与趋势</router-link>
+
     <button type="button" class="mine__logout" @click="logout">退出登录</button>
   </div>
 </template>
@@ -47,6 +49,15 @@ function logout() {
   font-size: 14px;
   font-weight: 700;
   color: var(--muted);
+}
+
+.mine__link {
+  display: block;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  font-weight: 800;
+  text-decoration: none;
+  color: inherit;
 }
 
 .mine__logout {

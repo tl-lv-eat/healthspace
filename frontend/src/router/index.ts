@@ -29,14 +29,22 @@ const router = createRouter({
         {
           path: 'calendar',
           name: 'calendar',
-          component: () => import('@/views/PlaceholderTabView.vue'),
-          props: { phase: 'P1', title: '日历' },
+          component: () => import('@/views/CalendarView.vue'),
+        },
+        {
+          path: 'calendar/day/:date',
+          name: 'calendar-day',
+          component: () => import('@/views/DayDetailView.vue'),
         },
         {
           path: 'journal',
           name: 'journal',
-          component: () => import('@/views/PlaceholderTabView.vue'),
-          props: { phase: 'P1', title: '日志' },
+          component: () => import('@/views/JournalView.vue'),
+        },
+        {
+          path: 'body',
+          name: 'body',
+          component: () => import('@/views/BodyMetricsView.vue'),
         },
         {
           path: 'goals',
