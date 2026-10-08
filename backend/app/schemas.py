@@ -8,13 +8,31 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class SelectRequest(BaseModel):
+    user_id: str
+
+
+class ProfileUpdateRequest(BaseModel):
+    display_name: str
+    sex: str | None = None  # male|female
+    age: int | None = None
+
+
 class UserOut(BaseModel):
     id: str
     display_name: str
     default_water_ml: int
     role: str
+    sex: str | None = None
+    age: int | None = None
 
     model_config = {"from_attributes": True}
+
+
+class PersonaOut(BaseModel):
+    id: str
+    display_name: str
+    emoji: str
 
 
 class TokenResponse(BaseModel):
@@ -27,8 +45,18 @@ class MealEstimateOut(BaseModel):
     food_summary: str
     kcal: int
     advice: str
+    reason: str = ""
     image_path: str
     estimate_failed: bool = False
+
+
+class MealRefineIn(BaseModel):
+    image_path: str | None = None
+    food_summary: str
+    kcal: int
+    reason: str = ""
+    advice: str = ""
+    message: str
 
 
 class MealCreate(BaseModel):
@@ -112,6 +140,18 @@ class WorkoutOut(BaseModel):
     created_at: str
 
 
+class WorkoutPatch(BaseModel):
+    """Partial update — fields depend on kind (cardio vs strength)."""
+
+    cardio_type: str | None = None
+    duration_min: int | None = None
+    intensity: str | None = None
+    body_part: str | None = None
+    exercise_name: str | None = None
+    exercise_id: int | None = None
+    sets: list[WorkoutSetIn] | None = None
+
+
 class ExerciseCreate(BaseModel):
     name_zh: str
     name_en: str = ""
@@ -147,8 +187,14 @@ class BodyMetricOut(BaseModel):
 
 
 class WeekPlanUpsert(BaseModel):
-    week_start: str
+    id: int | None = None
+    week_start: str | None = None  # legacy alias for start_date
+    start_date: str | None = None
+    end_date: str | None = None
     water_target_ml: int
+    weekly_kcal_deficit: int = 3500
+    weekly_workout_sessions: int = 4
+    target_weight_kg: float | None = None
     meal_mode: str = "three_main"
     workout_mode: str = "any"
     workout_cardio_min: int | None = None
@@ -158,8 +204,14 @@ class WeekPlanUpsert(BaseModel):
 class WeekPlanOut(BaseModel):
     id: int | None
     user_id: str
-    week_start: str
+    week_start: str  # = start_date (compat)
+    start_date: str
+    end_date: str
+    period_days: int = 7
     water_target_ml: int
+    weekly_kcal_deficit: int = 3500
+    weekly_workout_sessions: int = 4
+    target_weight_kg: float | None = None
     meal_mode: str
     workout_mode: str
     workout_cardio_min: int | None = None

@@ -18,6 +18,8 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     default_water_ml: Mapped[int] = mapped_column(Integer, nullable=False, default=2000)
     role: Mapped[str] = mapped_column(String(32), nullable=False, default="member")
+    sex: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    age: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     meals: Mapped[list[Meal]] = relationship(back_populates="user")
     water_entries: Mapped[list[WaterEntry]] = relationship(back_populates="user")
@@ -92,8 +94,17 @@ class WeekPlan(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[str] = mapped_column(String(32), ForeignKey("users.id"), nullable=False, index=True)
+    # week_start kept as DB column name = plan start_date (YYYY-MM-DD)
     week_start: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
+    # Inclusive end date; defaults to start+6 when missing (legacy rows).
+    end_date: Mapped[str | None] = mapped_column(String(10), nullable=True, index=True)
     water_target_ml: Mapped[int] = mapped_column(Integer, nullable=False, default=2000)
+    # Period calorie deficit target (kcal). Split evenly across period days.
+    weekly_kcal_deficit: Mapped[int] = mapped_column(Integer, nullable=False, default=3500)
+    # Target number of workout days in this period (not every day).
+    weekly_workout_sessions: Mapped[int] = mapped_column(Integer, nullable=False, default=4)
+    target_weight_kg: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # Legacy completion modes (still used by today checkboxes / points).
     meal_mode: Mapped[str] = mapped_column(String(32), nullable=False, default="three_main")
     workout_mode: Mapped[str] = mapped_column(String(32), nullable=False, default="any")
     workout_cardio_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
