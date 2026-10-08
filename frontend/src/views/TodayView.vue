@@ -112,6 +112,38 @@ const hourHint = computed(() => {
   if (h < 18) return '下午好'
   return '晚上好'
 })
+
+const meEnergy = computed(() => today.value?.me.energy)
+
+/** Plan-backed target; `/water` and `/today` should agree after reload on date change. */
+const waterTargetMl = computed(
+  () =>
+    waterDay.value?.target_ml ??
+    today.value?.me.water.target_ml ??
+    today.value?.me.energy.water_target_ml ??
+    null,
+)
+
+const energySurplusTip = computed(() => {
+  const s = meEnergy.value?.surplus_kcal ?? 0
+  if (s > 0) return `盈余 +${s}`
+  if (s < 0) return `缺口 ${Math.abs(s)}`
+  return '持平 0'
+})
+
+const deficitContribKcal = computed(() => Math.max(0, -(meEnergy.value?.surplus_kcal ?? 0)))
+
+const intakeOverCap = computed(() => {
+  const e = meEnergy.value
+  if (!e || e.daily_kcal_cap == null) return false
+  return e.intake_kcal > e.daily_kcal_cap
+})
+
+const intakeOverCapBy = computed(() => {
+  const e = meEnergy.value
+  if (!e || e.daily_kcal_cap == null) return 0
+  return Math.max(0, e.intake_kcal - e.daily_kcal_cap)
+})
 </script>
 
 <template>
@@ -229,8 +261,8 @@ const hourHint = computed(() => {
       </div>
       <div class="stat">
         <p class="stat__k">我的饮水</p>
-        <p class="stat__v water">{{ waterDay?.total_ml ?? 0 }}</p>
-        <p class="stat__u">/ {{ waterDay?.target_ml ?? '—' }} ml</p>
+        <p class="stat__v water">{{ waterDay?.total_ml ?? today?.me.water.total_ml ?? 0 }}</p>
+        <p class="stat__u">/ {{ waterTargetMl ?? '—' }} ml</p>
       </div>
       <div class="stat">
         <p class="stat__k">我的运动</p>
@@ -238,6 +270,60 @@ const hourHint = computed(() => {
         <p class="stat__u">条记录</p>
       </div>
     </div>
+
+    <details v-if="meEnergy" class="energy-ledger">
+      <summary class="energy-ledger__sum">
+        <span class="energy-ledger__title">能量账本</span>
+        <span class="energy-ledger__badge">{{ energySurplusTip }} kcal</span>
+      </summary>
+      <div class="energy-ledger__body">
+        <dl class="energy-ledger__grid">
+          <div>
+            <dt>摄入</dt>
+            <dd :class="{ 'energy-ledger__warn': intakeOverCap }">{{ meEnergy.intake_kcal }}</dd>
+          </div>
+          <div>
+            <dt>运动消耗</dt>
+            <dd>{{ meEnergy.burn_kcal }}</dd>
+          </div>
+          <div>
+            <dt>基础代谢</dt>
+            <dd>{{ meEnergy.bmr }}</dd>
+          </div>
+          <div>
+            <dt>净平衡</dt>
+            <dd>{{ energySurplusTip }}</dd>
+          </div>
+        </dl>
+        <p class="energy-ledger__eq">
+          {{ meEnergy.intake_kcal }} − {{ meEnergy.burn_kcal }} − {{ meEnergy.bmr }} =
+          {{ energySurplusTip }} kcal
+        </p>
+        <ul class="energy-ledger__plan">
+          <li>
+            计划日均缺口
+            <strong>{{ meEnergy.daily_deficit_target }}</strong>
+            kcal；今日缺口贡献
+            <strong>{{ deficitContribKcal }}</strong>
+            kcal
+            <span
+              v-if="meEnergy.daily_deficit_target > 0 && deficitContribKcal < meEnergy.daily_deficit_target"
+              class="energy-ledger__soft"
+            >
+              （还差 {{ meEnergy.daily_deficit_target - deficitContribKcal }}）
+            </span>
+          </li>
+          <li v-if="meEnergy.daily_kcal_cap != null" :class="{ 'energy-ledger__warn-line': intakeOverCap }">
+            日摄入上限 <strong>{{ meEnergy.daily_kcal_cap }}</strong> kcal
+            <template v-if="intakeOverCap">
+              — 已超 {{ intakeOverCapBy }} kcal
+            </template>
+            <template v-else> — 未超顶</template>
+          </li>
+          <li v-else class="energy-ledger__soft">未设置日摄入上限（仅按缺口目标参考）</li>
+        </ul>
+      </div>
+    </details>
 
     <main class="today__body">
       <van-pull-refresh v-model="refreshing" @refresh="reload()">
@@ -620,6 +706,115 @@ html[data-persona='leaf'] .rail--dragon {
   font-size: 10px;
   color: var(--muted);
   font-weight: 600;
+}
+
+.energy-ledger {
+  margin-bottom: 16px;
+  border-radius: 20px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.energy-ledger__sum {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 700;
+}
+
+.energy-ledger__sum::-webkit-details-marker {
+  display: none;
+}
+
+.energy-ledger__title {
+  font-size: 14px;
+}
+
+.energy-ledger__badge {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+}
+
+.energy-ledger__body {
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--line);
+}
+
+.energy-ledger__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 12px;
+  margin: 14px 0 0;
+  padding: 0;
+}
+
+.energy-ledger__grid > div {
+  margin: 0;
+}
+
+.energy-ledger__grid dt {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.energy-ledger__grid dd {
+  margin: 4px 0 0;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.energy-ledger__eq {
+  margin: 12px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.energy-ledger__plan {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 12px 0 0;
+  border-top: 1px dashed var(--line);
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.energy-ledger__plan strong {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.energy-ledger__soft {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.energy-ledger__warn,
+.energy-ledger__warn-line {
+  color: var(--cal);
+}
+
+.energy-ledger__warn-line strong {
+  color: var(--cal);
 }
 
 .workout-panel {
