@@ -8,7 +8,11 @@ from sqlalchemy.orm import Session
 
 from backend.app.models import User
 from backend.app.services.couple_settings_service import get_or_create_couple_settings
-from backend.app.services.points_rules import evaluate_daily_points
+from backend.app.services.points_rules import (
+    evaluate_daily_points,
+    evaluate_plan_settlement,
+    plans_due_for_settlement,
+)
 
 
 def _couple_user_ids(db: Session) -> list[str]:
@@ -17,10 +21,13 @@ def _couple_user_ids(db: Session) -> list[str]:
 
 
 def settle_daily_for_date(db: Session, day: date) -> dict:
-    """Grant daily water / deficit / workout points for each user on ``day``."""
+    """Grant daily points for ``day`` and plan tier points for plans that ended yesterday."""
     settings = get_or_create_couple_settings(db)
     day_str = day.isoformat()
     per_user: dict[str, dict] = {}
     for user_id in _couple_user_ids(db):
         per_user[user_id] = evaluate_daily_points(db, user_id, day, settings)
-    return {"date": day_str, "users": per_user}
+    plan_results = [
+        evaluate_plan_settlement(db, plan, settings) for plan in plans_due_for_settlement(db, day)
+    ]
+    return {"date": day_str, "users": per_user, "plans": plan_results}
