@@ -15,7 +15,6 @@ from backend.app.routers import body as body_router
 from backend.app.routers import calendar as calendar_router
 from backend.app.routers import chat as chat_router
 from backend.app.routers import exercises as exercises_router
-from backend.app.routers import goals as goals_router
 from backend.app.routers import journal as journal_router
 from backend.app.routers import push as push_router
 from backend.app.routers import reports as reports_router
@@ -60,7 +59,6 @@ app.include_router(points_router.router, prefix="/api/points", tags=["points"])
 app.include_router(
     couple_settings_router.router, prefix="/api/couple-settings", tags=["couple-settings"]
 )
-app.include_router(goals_router.router, prefix="/api/goals", tags=["goals"])
 app.include_router(rewards_router.router, prefix="/api/rewards", tags=["rewards"])
 app.include_router(reports_router.router, prefix="/api/reports", tags=["reports"])
 app.include_router(chat_router.router, prefix="/api/chat", tags=["chat"])
