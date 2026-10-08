@@ -8,6 +8,8 @@ from sqlalchemy.orm import Session
 from backend.app.auth import get_current_user
 from backend.app.db import get_db
 from backend.app.models import User, WaterEntry
+from backend.app.routers.week_plans import get_week_plan_for_user, plan_as_dict
+from backend.app.services.week_rules import effective_rules
 from backend.app.schemas import WaterCreate, WaterDayOut, WaterEntryOut, WaterPatch
 
 router = APIRouter()
@@ -45,7 +47,9 @@ def get_water_day(
     )
     entries = [_entry_to_out(e) for e in rows]
     total_ml = sum(e.amount_ml for e in rows)
-    return WaterDayOut(target_ml=user.default_water_ml, total_ml=total_ml, entries=entries)
+    plan = get_week_plan_for_user(user, date, db)
+    rules = effective_rules(plan_as_dict(plan, user), user.default_water_ml)
+    return WaterDayOut(target_ml=rules["water_target_ml"], total_ml=total_ml, entries=entries)
 
 
 @router.post("", response_model=WaterEntryOut)
