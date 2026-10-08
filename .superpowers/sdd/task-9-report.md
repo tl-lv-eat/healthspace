@@ -33,3 +33,13 @@ cd frontend && npm run build  → OK
 - [x] 四餐选图 → `/meals/estimate` → 可改 kcal → `POST /meals`
 - [x] `estimate_failed` + `image_path` 手填保存
 - [x] 无图手填入口
+
+## Follow-up: estimate transport fail-open
+
+**Issue:** `MealPanel.onFileSelected` closed the compose popup and called `resetCompose()` on `estimateMeal` network/HTTP errors, discarding local preview and blocking hand-fill in the same sheet.
+
+**Fix:** On `catch`, keep `composeVisible` and `previewUrl`; set `estimateFailed = true`; toast「上传或估卡失败，请手填热量」— aligned with HTTP 200 + `estimate_failed` UX.
+
+**Verification:** `cd frontend && npm run build` → OK
+
+**Commit:** `691e4b3` — fix: keep meal compose open on estimate transport errors
