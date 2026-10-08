@@ -33,10 +33,13 @@ def client(tmp_path) -> Generator[TestClient, None, None]:
     config_file = tmp_path / "test-config.yaml"
     config_file.write_text(_TEST_APP_CONFIG, encoding="utf-8")
 
+    upload_dir = tmp_path / "uploads" / "meals"
     prior_db_url = os.environ.get("DATABASE_URL")
     prior_config = os.environ.get("JIANFEI_CONFIG")
+    prior_upload = os.environ.get("UPLOAD_DIR")
     os.environ["DATABASE_URL"] = f"sqlite:///{db_file.as_posix()}"
     os.environ["JIANFEI_CONFIG"] = str(config_file)
+    os.environ["UPLOAD_DIR"] = str(upload_dir)
     clear_settings_cache()
 
     from backend.app.db import init_db, rebind_engine
@@ -60,4 +63,24 @@ def client(tmp_path) -> Generator[TestClient, None, None]:
             os.environ.pop("JIANFEI_CONFIG", None)
         else:
             os.environ["JIANFEI_CONFIG"] = prior_config
+        if prior_upload is None:
+            os.environ.pop("UPLOAD_DIR", None)
+        else:
+            os.environ["UPLOAD_DIR"] = prior_upload
         clear_settings_cache()
+
+
+@pytest.fixture
+def auth_header(client) -> dict[str, str]:
+    r = client.post("/api/auth/login", json={"user_id": "dragon", "password": "dragon-pass"})
+    assert r.status_code == 200
+    token = r.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def leaf_auth_header(client) -> dict[str, str]:
+    r = client.post("/api/auth/login", json={"user_id": "leaf", "password": "leaf-pass"})
+    assert r.status_code == 200
+    token = r.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
