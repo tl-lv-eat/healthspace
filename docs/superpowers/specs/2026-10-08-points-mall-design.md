@@ -1,6 +1,6 @@
 # 积分与商城（去掉目标）
 
-**Status:** approved for planning  
+**Status:** implemented  
 **Date:** 2026-10-08  
 **Approach:** 改造现有 PointsLedger / Reward / Redemption；删除 Goal；Tab「目标」→「积分与商城」；定时按结算时刻日结/计划结。
 
