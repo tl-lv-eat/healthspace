@@ -96,6 +96,42 @@ def test_create_plan_for_partner(client, auth_header):
     assert on.json()["water_target_ml"] == 2200
 
 
+def test_put_plan_by_id_rejects_wrong_target_user(client, leaf_auth_header):
+    created = client.put(
+        "/api/week-plans",
+        headers=leaf_auth_header,
+        json={
+            "start_date": "2026-08-04",
+            "end_date": "2026-08-10",
+            "water_target_ml": 2100,
+            "weekly_kcal_deficit": 3500,
+            "weekly_workout_sessions": 3,
+            "meal_mode": "three_main",
+            "workout_mode": "any",
+        },
+    )
+    assert created.status_code == 200
+    plan_id = created.json()["id"]
+    assert created.json()["user_id"] == "leaf"
+
+    hijack = client.put(
+        "/api/week-plans",
+        headers=leaf_auth_header,
+        json={
+            "id": plan_id,
+            "target_user_id": "dragon",
+            "start_date": "2026-08-04",
+            "end_date": "2026-08-10",
+            "water_target_ml": 9999,
+            "weekly_kcal_deficit": 3500,
+            "weekly_workout_sessions": 3,
+            "meal_mode": "three_main",
+            "workout_mode": "any",
+        },
+    )
+    assert hijack.status_code == 404
+
+
 def test_week_plan_delete(client, auth_header):
     r = client.put(
         "/api/week-plans",
