@@ -71,6 +71,17 @@ def client(tmp_path) -> Generator[TestClient, None, None]:
 
 
 @pytest.fixture
+def db_session(client) -> Generator:
+    from backend.app.db import SessionLocal
+
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@pytest.fixture
 def auth_header(client) -> dict[str, str]:
     r = client.post("/api/auth/login", json={"user_id": "dragon", "password": "dragon-pass"})
     assert r.status_code == 200

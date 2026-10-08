@@ -114,3 +114,62 @@ class Exercise(Base):
     instructions_zh: Mapped[str] = mapped_column(Text, nullable=False, default="")
     is_custom: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     owner_user_id: Mapped[str | None] = mapped_column(String(32), ForeignKey("users.id"), nullable=True)
+
+
+class PointsLedger(Base):
+    __tablename__ = "points_ledger"
+    __table_args__ = (UniqueConstraint("idempotency_key", name="uq_points_idempotency_key"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(32), ForeignKey("users.id"), nullable=False, index=True)
+    delta: Mapped[int] = mapped_column(Integer, nullable=False)
+    reason: Mapped[str] = mapped_column(String(64), nullable=False)
+    idempotency_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    meta_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+
+class Goal(Base):
+    __tablename__ = "goals"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String(32), ForeignKey("users.id"), nullable=False, index=True)
+    kind: Mapped[str] = mapped_column(String(16), nullable=False)
+    title: Mapped[str] = mapped_column(String(256), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    metric: Mapped[str] = mapped_column(String(32), nullable=False)
+    target_value: Mapped[float] = mapped_column(Float, nullable=False)
+    current_value: Mapped[float] = mapped_column(Float, nullable=False, default=0)
+    unit: Mapped[str] = mapped_column(String(32), nullable=False, default="")
+    start_date: Mapped[str] = mapped_column(String(10), nullable=False)
+    end_date: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="active")
+    meta_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+
+class Reward(Base):
+    __tablename__ = "rewards"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    creator_user_id: Mapped[str] = mapped_column(String(32), ForeignKey("users.id"), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(256), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    is_private: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    scale_level: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    cost_note: Mapped[str] = mapped_column(String(256), nullable=False, default="")
+    points_price: Mapped[int] = mapped_column(Integer, nullable=False)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+
+class Redemption(Base):
+    __tablename__ = "redemptions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    reward_id: Mapped[int] = mapped_column(Integer, ForeignKey("rewards.id"), nullable=False, index=True)
+    redeemer_user_id: Mapped[str] = mapped_column(String(32), ForeignKey("users.id"), nullable=False, index=True)
+    points_spent: Mapped[int] = mapped_column(Integer, nullable=False)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending")
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    fulfilled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
