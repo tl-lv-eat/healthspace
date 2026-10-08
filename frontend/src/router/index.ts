@@ -17,6 +17,21 @@ const router = createRouter({
       component: () => import('@/views/WorkoutView.vue'),
     },
     {
+      path: '/report',
+      name: 'report',
+      component: () => import('@/views/ReportView.vue'),
+    },
+    {
+      path: '/chat',
+      name: 'chat',
+      component: () => import('@/views/ChatView.vue'),
+    },
+    {
+      path: '/push',
+      name: 'push',
+      component: () => import('@/views/PushSettings.vue'),
+    },
+    {
       path: '/',
       component: TabLayout,
       redirect: '/today',

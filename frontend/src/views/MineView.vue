@@ -20,6 +20,9 @@ function logout() {
     </header>
 
     <router-link to="/body" class="mine__link fit-card">身体数据与趋势</router-link>
+    <router-link to="/report" class="mine__link fit-card">AI 报告</router-link>
+    <router-link to="/chat" class="mine__link fit-card">智能聊天</router-link>
+    <router-link to="/push" class="mine__link fit-card">推送设置（PushPlus）</router-link>
 
     <button type="button" class="mine__logout" @click="logout">退出登录</button>
   </div>

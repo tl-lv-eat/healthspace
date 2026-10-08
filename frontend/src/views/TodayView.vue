@@ -13,6 +13,7 @@ import {
 } from '@/api/today'
 import { fetchWaterDay, type WaterDay } from '@/api/water'
 import { formatWorkoutSummary } from '@/api/workouts'
+import { fetchReport, type AiReport } from '@/api/reports'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -27,6 +28,13 @@ const date = ref(dateFromRoute())
 const today = ref<TodayResponse | null>(null)
 const waterDay = ref<WaterDay | null>(null)
 const refreshing = ref(false)
+const dailyReport = ref<AiReport | null>(null)
+const reportExcerpt = computed(() => {
+  const md = dailyReport.value?.content_md ?? ''
+  if (!md) return ''
+  const line = md.split('\n').find((l) => l.trim() && !l.startsWith('#'))
+  return (line ?? md).slice(0, 120)
+})
 
 async function reload(withOverlay = false) {
   if (withOverlay) {
@@ -36,6 +44,11 @@ async function reload(withOverlay = false) {
     const [t, w] = await Promise.all([fetchToday(date.value), fetchWaterDay(date.value)])
     today.value = t
     waterDay.value = w
+    try {
+      dailyReport.value = await fetchReport('daily', date.value)
+    } catch {
+      dailyReport.value = null
+    }
   } catch {
     showFailToast('加载今日数据失败')
   } finally {
@@ -86,6 +99,15 @@ const doneCount = computed(() => {
         <span>{{ doneCount }}/3</span>
       </div>
     </header>
+
+    <router-link
+      v-if="dailyReport"
+      :to="{ name: 'report', query: { kind: 'daily', period: date } }"
+      class="today__report fit-card"
+    >
+      <p class="fit-section-label">AI 日报告</p>
+      <p class="today__report-text">{{ reportExcerpt }}…</p>
+    </router-link>
 
     <div v-if="today" class="today__partner fit-card">
       <div class="today__partner-head">
@@ -192,6 +214,22 @@ const doneCount = computed(() => {
     radial-gradient(circle at center, var(--bg) 58%, transparent 59%),
     conic-gradient(var(--primary) var(--p), var(--line) 0);
   color: var(--ink);
+}
+
+.today__report {
+  display: block;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.today__report-text {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+  font-weight: 600;
 }
 
 .today__partner {
