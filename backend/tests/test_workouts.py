@@ -1,3 +1,19 @@
+def test_strength_requires_duration(client, auth_header):
+    r = client.post(
+        "/api/workouts",
+        headers=auth_header,
+        json={
+            "date": "2026-10-08",
+            "kind": "strength",
+            "body_part": "chest",
+            "exercise_name": "卧推",
+            "exercise_id": 1,
+            "sets": [{"reps": 10}],
+        },
+    )
+    assert r.status_code == 422
+
+
 def test_strength_workout(client, auth_header):
     r = client.post(
         "/api/workouts",
@@ -7,6 +23,7 @@ def test_strength_workout(client, auth_header):
             "kind": "strength",
             "body_part": "chest",
             "exercise_name": "杠铃卧推",
+            "duration_min": 25,
             "sets": [{"reps": 10}, {"reps": 8}],
         },
     )

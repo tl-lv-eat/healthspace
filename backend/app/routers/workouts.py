@@ -74,6 +74,11 @@ def _validate_workout_create(body: WorkoutCreate) -> dict:
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="exercise_name is required for strength workouts",
         )
+    if body.duration_min is None or body.duration_min <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="duration_min must be a positive integer",
+        )
     if not body.sets:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -93,6 +98,7 @@ def _validate_workout_create(body: WorkoutCreate) -> dict:
     payload = {
         "body_part": body.body_part.strip(),
         "exercise_name": body.exercise_name.strip(),
+        "duration_min": body.duration_min,
         "sets": sets_payload,
     }
     if body.exercise_id is not None:
