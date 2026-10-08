@@ -8,27 +8,51 @@ export interface DoneFlags {
   workout: boolean
 }
 
+export interface WaterEntryBrief {
+  id: number
+  amount_ml: number
+  created_at: string
+}
+
 export interface TodayWaterSummary {
   total_ml: number
   target_ml: number
   done: boolean
+  entries: WaterEntryBrief[]
 }
 
-export interface TodayMe {
+export interface TodayEnergy {
+  intake_kcal: number
+  burn_kcal: number
+  bmr: number
+  surplus_kcal: number
+  daily_deficit_target: number
+  daily_kcal_cap: number | null
+  water_target_ml: number
+  period_days: number
+}
+
+export interface TodayPlanBrief {
+  id: number
+  title: string | null
+  start_date: string
+  end_date: string
+}
+
+export interface TodayDaySection {
   user_id: string
+  display_name?: string
   meals: Meal[]
   water: TodayWaterSummary
   workouts: Workout[]
   done: DoneFlags
+  energy: TodayEnergy
+  plan: TodayPlanBrief | null
 }
 
-export interface TodayPartner {
-  user_id: string
-  display_name: string
-  done: DoneFlags
-  water_total_ml: number
-  water_target_ml: number
-}
+export type TodayMe = TodayDaySection
+
+export type TodayPartner = TodayDaySection & { display_name: string }
 
 export interface TodayResponse {
   date: string

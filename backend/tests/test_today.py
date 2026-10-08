@@ -40,13 +40,60 @@ def test_today_summary_self_detail_and_partner_summary(client, auth_header, leaf
 
     partner = data["partner"]
     assert partner["user_id"] == "leaf"
-    assert partner["display_name"] == "🍃"
+    assert partner["display_name"] == "叶子"
     assert partner["done"]["meal"] is False
     assert partner["done"]["water"] is False
     assert partner["done"]["workout"] is True
-    assert partner["water_total_ml"] == 500
-    assert partner["water_target_ml"] == 2000
-    assert "meals" not in partner
+    assert partner["water"]["total_ml"] == 500
+    assert partner["water"]["target_ml"] == 2000
+    assert partner["energy"]["intake_kcal"] == 0
+    assert len(partner["meals"]) == 0
+    assert len(partner["workouts"]) == 1
+    assert "energy" in partner
+
+
+def test_today_includes_energy_and_water_entries(client, auth_header):
+    date = "2026-10-08"
+    client.post(
+        "/api/meals",
+        headers=auth_header,
+        json={
+            "date": date,
+            "meal_type": "lunch",
+            "food_summary": "饭",
+            "user_kcal": 400,
+        },
+    )
+    client.post(
+        "/api/water",
+        headers=auth_header,
+        json={"date": date, "amount_ml": 250},
+    )
+    r = client.get("/api/today", headers=auth_header, params={"date": date})
+    assert r.status_code == 200
+    me = r.json()["me"]
+    assert "energy" in me
+    e = me["energy"]
+    for k in (
+        "intake_kcal",
+        "burn_kcal",
+        "bmr",
+        "surplus_kcal",
+        "daily_deficit_target",
+        "daily_kcal_cap",
+        "water_target_ml",
+        "period_days",
+    ):
+        assert k in e
+    assert e["intake_kcal"] == 400
+    assert e["water_target_ml"] == 2000
+    assert "entries" in me["water"]
+    assert len(me["water"]["entries"]) == 1
+    entry = me["water"]["entries"][0]
+    assert entry["amount_ml"] == 250
+    assert "id" in entry
+    assert "created_at" in entry
+    assert "plan" in me
 
 
 def test_today_requires_auth(client):

@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import calendar as cal_mod
 import json
@@ -10,11 +10,8 @@ from sqlalchemy.orm import Session
 from backend.app.auth import get_current_user
 from backend.app.db import get_db
 from backend.app.models import Meal, User, WaterEntry, Workout
-from backend.app.routers.today import (
-    _build_me_section,
-    _build_partner_section,
-    _get_partner,
-)
+from backend.app.routers.today import _get_partner
+from backend.app.services.day_section import build_day_section
 from backend.app.routers.week_plans import get_week_plan_for_user, plan_as_dict
 from backend.app.services.week_rules import day_status, effective_rules
 
@@ -105,6 +102,6 @@ def get_calendar_day(
             "display_name": leaf.display_name,
             "status": _status_for_user(leaf, date_str, db),
         },
-        "me": _build_me_section(user, date_str, db),
-        "partner": _build_partner_section(partner, date_str, db),
+        "me": build_day_section(user, date_str, db),
+        "partner": build_day_section(partner, date_str, db, display_name=partner.display_name),
     }
