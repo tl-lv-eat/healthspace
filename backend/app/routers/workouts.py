@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from backend.app.auth import get_current_user
 from backend.app.db import get_db
 from backend.app.models import User, Workout
-from backend.app.schemas import WorkoutCreate, WorkoutOut
+from backend.app.schemas import WorkoutCreate, WorkoutOut, WorkoutPatch
 
 router = APIRouter()
 
@@ -150,6 +150,90 @@ def list_workouts(
     return [_workout_to_out(w) for w in rows]
 
 
+@router.patch("/{workout_id}", response_model=WorkoutOut)
+def patch_workout(
+    workout_id: int,
+    body: WorkoutPatch,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> WorkoutOut:
+    workout = _get_owned_workout(workout_id, user, db)
+    try:
+        payload = json.loads(workout.payload) if workout.payload else {}
+    except json.JSONDecodeError:
+        payload = {}
+    if not isinstance(payload, dict):
+        payload = {}
+
+    if workout.kind == "cardio":
+        if body.cardio_type is not None:
+            if body.cardio_type not in CARDIO_TYPES:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"cardio_type must be one of: {', '.join(sorted(CARDIO_TYPES))}",
+                )
+            payload["cardio_type"] = body.cardio_type
+        if body.duration_min is not None:
+            if body.duration_min <= 0:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="duration_min must be a positive integer",
+                )
+            payload["duration_min"] = body.duration_min
+        if body.intensity is not None:
+            if body.intensity:
+                payload["intensity"] = body.intensity
+            else:
+                payload.pop("intensity", None)
+    else:
+        if body.body_part is not None:
+            payload["body_part"] = body.body_part.strip()
+        if body.exercise_name is not None:
+            name = body.exercise_name.strip()
+            if not name:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="exercise_name cannot be empty",
+                )
+            payload["exercise_name"] = name
+        if body.exercise_id is not None:
+            payload["exercise_id"] = body.exercise_id
+        if body.duration_min is not None:
+            if body.duration_min <= 0:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="duration_min must be a positive integer",
+                )
+            payload["duration_min"] = body.duration_min
+        if body.sets is not None:
+            if not body.sets:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="sets must contain at least one entry",
+                )
+            sets_payload = []
+            for s in body.sets:
+                if s.reps <= 0:
+                    raise HTTPException(
+                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        detail="each set must have reps > 0",
+                    )
+                item: dict = {"reps": s.reps}
+                if s.weight is not None:
+                    item["weight"] = s.weight
+                sets_payload.append(item)
+            payload["sets"] = sets_payload
+
+    workout.payload = json.dumps(payload, ensure_ascii=False)
+    db.add(workout)
+    db.commit()
+    db.refresh(workout)
+    from backend.app.services.points_hooks import after_daily_activity
+
+    after_daily_activity(db, user.id, workout.date)
+    return _workout_to_out(workout)
+
+
 @router.delete("/{workout_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_workout(
     workout_id: int,
@@ -157,5 +241,9 @@ def delete_workout(
     db: Session = Depends(get_db),
 ) -> None:
     workout = _get_owned_workout(workout_id, user, db)
+    day = workout.date
     db.delete(workout)
     db.commit()
+    from backend.app.services.points_hooks import after_daily_activity
+
+    after_daily_activity(db, user.id, day)

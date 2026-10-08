@@ -12,6 +12,8 @@ export const CARDIO_TYPE_LABELS: Record<CardioType, string> = {
 }
 
 export const BODY_PART_LABELS: Record<string, string> = {
+  bodyweight: '自重',
+  kettlebell: '壶铃',
   chest: '胸',
   back: '背',
   shoulders: '肩',
@@ -35,6 +37,7 @@ export interface WorkoutPayloadStrength {
   body_part: string
   exercise_name: string
   exercise_id?: number
+  duration_min?: number
   sets: WorkoutSet[]
 }
 
@@ -61,6 +64,7 @@ export interface StrengthCreate {
   body_part: string
   exercise_id?: number
   exercise_name: string
+  duration_min: number
   sets: WorkoutSet[]
 }
 
@@ -78,6 +82,22 @@ export async function deleteWorkout(id: number): Promise<void> {
   await http.delete(`/workouts/${id}`)
 }
 
+export async function patchWorkout(
+  id: number,
+  body: Partial<{
+    cardio_type: CardioType
+    duration_min: number
+    intensity: string
+    body_part: string
+    exercise_name: string
+    exercise_id: number
+    sets: WorkoutSet[]
+  }>,
+): Promise<Workout> {
+  const { data } = await http.patch<Workout>(`/workouts/${id}`, body)
+  return data
+}
+
 export function formatWorkoutSummary(w: Workout): string {
   if (w.kind === 'cardio') {
     const p = w.payload as WorkoutPayloadCardio
@@ -89,5 +109,6 @@ export function formatWorkoutSummary(w: Workout): string {
   const setCount = p.sets?.length ?? 0
   const reps = p.sets?.[0]?.reps
   const repsPart = reps != null ? ` · ${setCount}×${reps}` : setCount ? ` · ${setCount} 组` : ''
-  return `${part} · ${p.exercise_name}${repsPart}`
+  const minPart = (p.duration_min ?? 0) > 0 ? ` · ${p.duration_min} 分钟` : ''
+  return `${part} · ${p.exercise_name}${minPart}${repsPart}`
 }

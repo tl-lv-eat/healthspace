@@ -19,6 +19,12 @@ const loadingExercises = ref(false)
 const selected = ref<Exercise | null>(null)
 const setCount = ref(3)
 const repsPerSet = ref(10)
+const durationMin = ref(30)
+const brokenGifs = ref<Record<number, boolean>>({})
+
+function onGifError(id: number) {
+  brokenGifs.value = { ...brokenGifs.value, [id]: true }
+}
 
 watch(bodyPart, async (part) => {
   if (!part) return
@@ -48,6 +54,7 @@ function pickExercise(ex: Exercise) {
   selected.value = ex
   setCount.value = 3
   repsPerSet.value = 10
+  durationMin.value = 30
   step.value = 'sets'
 }
 
@@ -59,8 +66,14 @@ function backToExercises() {
 async function save() {
   const ex = selected.value
   const part = bodyPart.value
-  if (!ex || !part || setCount.value <= 0 || repsPerSet.value <= 0) {
-    showFailToast('请填写有效组数与次数')
+  if (
+    !ex ||
+    !part ||
+    setCount.value <= 0 ||
+    repsPerSet.value <= 0 ||
+    durationMin.value <= 0
+  ) {
+    showFailToast('请填写有效时长、组数与次数')
     return
   }
   const sets = Array.from({ length: setCount.value }, () => ({ reps: repsPerSet.value }))
@@ -72,6 +85,7 @@ async function save() {
       body_part: part,
       exercise_id: ex.id,
       exercise_name: ex.name_zh,
+      duration_min: durationMin.value,
       sets,
     })
     closeToast()
@@ -88,13 +102,16 @@ async function save() {
 <template>
   <div class="strength-picker">
     <template v-if="step === 'part'">
-      <p class="hint">选择训练部位</p>
+      <p class="hint">选择分类（含自重 / 壶铃）</p>
       <div class="type-grid">
         <button
           v-for="part in BODY_PARTS"
           :key="part"
           type="button"
           class="type-card"
+          :class="{
+            'type-card--hot': part === 'bodyweight' || part === 'kettlebell',
+          }"
           @click="pickPart(part)"
         >
           {{ BODY_PART_LABELS[part] }}
@@ -119,13 +136,15 @@ async function save() {
           @click="pickExercise(ex)"
         >
           <img
-            v-if="ex.gif_url"
+            v-if="ex.gif_url && !brokenGifs[ex.id]"
             :src="ex.gif_url"
             :alt="ex.name_zh"
             class="exercise-gif"
             loading="lazy"
+            referrerpolicy="no-referrer"
+            @error="onGifError(ex.id)"
           />
-          <div v-else class="exercise-gif placeholder">无图</div>
+          <div v-else class="exercise-gif placeholder">{{ ex.name_zh.slice(0, 2) }}</div>
           <div class="exercise-meta">
             <strong>{{ ex.name_zh }}</strong>
             <p v-if="ex.instructions_zh">{{ ex.instructions_zh }}</p>
@@ -137,6 +156,12 @@ async function save() {
 
     <template v-else-if="step === 'sets' && selected">
       <van-cell :title="selected.name_zh" is-link label="换动作" @click="backToExercises" />
+      <van-cell title="时长（分钟）">
+        <template #value>
+          <van-stepper v-model="durationMin" min="1" max="180" step="5" />
+        </template>
+      </van-cell>
+      <p class="hint">必填，与有氧合计 ≥40 分钟可获日结运动分</p>
       <van-cell title="组数">
         <template #value>
           <van-stepper v-model="setCount" min="1" max="20" />
@@ -184,6 +209,12 @@ async function save() {
   font-size: 14px;
   font-weight: 800;
   cursor: pointer;
+  color: var(--ink);
+}
+
+.type-card--hot {
+  background: var(--workout-soft);
+  color: var(--workout);
 }
 
 .load-center {
