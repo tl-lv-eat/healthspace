@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from backend.app.models import Base, User
+from backend.app.models import Achievement, Base, User
 from backend.app.settings import get_settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -157,6 +157,101 @@ def _ensure_reward_mall_columns() -> None:
             )
 
 
+_DEFAULT_ACHIEVEMENTS: list[dict] = [
+    {
+        "slug": "green_days_7",
+        "title": "绿日达人",
+        "description": "累计 7 个日历绿日（饮水达标且热量未超标）",
+        "scope": "shared",
+        "metric": "green_days_total",
+        "target_value": 7,
+        "points_reward": 10,
+        "sort_order": 10,
+    },
+    {
+        "slug": "green_streak_3",
+        "title": "连续自律",
+        "description": "最长连续 3 天绿日",
+        "scope": "shared",
+        "metric": "green_streak",
+        "target_value": 3,
+        "points_reward": 15,
+        "sort_order": 20,
+    },
+    {
+        "slug": "workouts_5",
+        "title": "运动起步",
+        "description": "累计记录 5 次运动",
+        "scope": "shared",
+        "metric": "workout_sessions",
+        "target_value": 5,
+        "points_reward": 10,
+        "sort_order": 30,
+    },
+    {
+        "slug": "workout_minutes_100",
+        "title": "百炼成钢",
+        "description": "运动总时长达到 100 分钟",
+        "scope": "shared",
+        "metric": "workout_minutes_total",
+        "target_value": 100,
+        "points_reward": 20,
+        "sort_order": 40,
+    },
+    {
+        "slug": "water_ok_7",
+        "title": "饮水常客",
+        "description": "累计 7 天饮水达标",
+        "scope": "shared",
+        "metric": "water_ok_days",
+        "target_value": 7,
+        "points_reward": 10,
+        "sort_order": 50,
+    },
+    {
+        "slug": "bmi_healthy",
+        "title": "BMI 健康区间",
+        "description": "最新身体数据 BMI 落在健康区间",
+        "scope": "persona",
+        "metric": "bmi_in_range",
+        "target_value": 1,
+        "points_reward": 25,
+        "rule_json": '{"bmi_min": 18.5, "bmi_max": 24.0}',
+        "sort_order": 60,
+    },
+    {
+        "slug": "body_fat_ok",
+        "title": "体脂达标",
+        "description": "最新体脂率在性别默认上限以内（男 20% / 女 28%）",
+        "scope": "persona",
+        "metric": "body_fat_max",
+        "target_value": 1,
+        "points_reward": 30,
+        "rule_json": '{"male_max": 20, "female_max": 28}',
+        "sort_order": 70,
+    },
+]
+
+
+def _seed_default_achievements(db: Session) -> None:
+    for spec in _DEFAULT_ACHIEVEMENTS:
+        if db.query(Achievement).filter(Achievement.slug == spec["slug"]).first():
+            continue
+        db.add(
+            Achievement(
+                slug=spec["slug"],
+                title=spec["title"],
+                description=spec["description"],
+                scope=spec["scope"],
+                metric=spec["metric"],
+                target_value=float(spec["target_value"]),
+                points_reward=int(spec["points_reward"]),
+                rule_json=spec.get("rule_json", "{}"),
+                sort_order=int(spec.get("sort_order", 0)),
+            )
+        )
+
+
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
     _ensure_user_profile_columns()
@@ -181,4 +276,5 @@ def init_db() -> None:
             legacy = _LEGACY_DISPLAY_NAMES.get(user_cfg.id, set())
             if existing.display_name in legacy:
                 existing.display_name = user_cfg.display_name
+        _seed_default_achievements(db)
         db.commit()

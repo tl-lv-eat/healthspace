@@ -9,6 +9,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.app.db import init_db
+from backend.app.routers import achievements as achievements_router
 from backend.app.routers import auth as auth_router
 from backend.app.routers import couple_settings as couple_settings_router
 from backend.app.routers import body as body_router
@@ -60,6 +61,7 @@ app.include_router(
     couple_settings_router.router, prefix="/api/couple-settings", tags=["couple-settings"]
 )
 app.include_router(rewards_router.router, prefix="/api/rewards", tags=["rewards"])
+app.include_router(achievements_router.router, prefix="/api/achievements", tags=["achievements"])
 app.include_router(reports_router.router, prefix="/api/reports", tags=["reports"])
 app.include_router(chat_router.router, prefix="/api/chat", tags=["chat"])
 app.include_router(push_router.router, prefix="/api/push", tags=["push"])

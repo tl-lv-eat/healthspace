@@ -32,6 +32,11 @@ const router = createRouter({
       component: () => import('@/views/PushSettings.vue'),
     },
     {
+      path: '/achievements',
+      name: 'achievements',
+      component: () => import('@/views/AchievementsView.vue'),
+    },
+    {
       path: '/settings',
       name: 'settings',
       component: () => import('@/views/SettingsView.vue'),
