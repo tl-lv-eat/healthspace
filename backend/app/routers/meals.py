@@ -9,7 +9,6 @@ from backend.app.auth import get_current_user
 from backend.app.db import get_db
 from backend.app.models import Meal, User
 from backend.app.schemas import MealCreate, MealEstimateOut, MealOut, MealPatch
-from backend.app.services.meal_ai import MealAIError, estimate_calories_from_image
 from backend.app.services.uploads import meal_upload_root, save_meal_image
 
 router = APIRouter()
@@ -41,6 +40,22 @@ def _meal_to_out(meal: Meal) -> MealOut:
     )
 
 
+def _validate_meal_image_path(image_path: str | None, user_id: str) -> None:
+    if image_path is None:
+        return
+    prefix = f"{user_id}/"
+    if ".." in image_path or image_path.startswith("/") or "\\" in image_path:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid image_path")
+    if not image_path.startswith(prefix):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="image_path must belong to the current user",
+        )
+    rest = image_path[len(prefix) :]
+    if not rest or "/" in rest:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid image_path")
+
+
 def _get_owned_meal(meal_id: int, user: User, db: Session) -> Meal:
     meal = db.get(Meal, meal_id)
     if meal is None or meal.user_id != user.id:
@@ -55,10 +70,18 @@ def estimate_meal(
 ) -> MealEstimateOut:
     relative = save_meal_image(file, user.id)
     full_path = meal_upload_root() / relative
+    from backend.app.services.meal_ai import MealAIError, estimate_calories_from_image
+
     try:
         result = estimate_calories_from_image(full_path)
-    except MealAIError as exc:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+    except MealAIError:
+        return MealEstimateOut(
+            food_summary="",
+            kcal=0,
+            advice="",
+            image_path=relative,
+            estimate_failed=True,
+        )
     return MealEstimateOut(
         food_summary=str(result["food_summary"]),
         kcal=int(result["kcal"]),
@@ -74,6 +97,7 @@ def create_meal(
     db: Session = Depends(get_db),
 ) -> MealOut:
     _validate_meal_type(body.meal_type)
+    _validate_meal_image_path(body.image_path, user.id)
     meal = Meal(
         user_id=user.id,
         date=body.date,

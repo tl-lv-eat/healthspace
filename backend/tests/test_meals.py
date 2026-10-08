@@ -13,7 +13,7 @@ def _tiny_jpeg() -> bytes:
 
 def test_create_meal_and_list(client, auth_header, monkeypatch):
     monkeypatch.setattr(
-        "backend.app.routers.meals.estimate_calories_from_image",
+        "backend.app.services.meal_ai.estimate_calories_from_image",
         lambda path: {"food_summary": "测试餐", "kcal": 500, "advice": "ok"},
     )
     r = client.post(
@@ -32,6 +32,24 @@ def test_create_meal_and_list(client, auth_header, monkeypatch):
     listed = client.get("/api/meals", headers=auth_header, params={"date": "2026-10-08"})
     assert len(listed.json()) == 1
     assert listed.json()[0]["user_kcal"] == 480
+
+
+def test_create_meal_without_ai(client, auth_header):
+    r = client.post(
+        "/api/meals",
+        headers=auth_header,
+        json={
+            "date": "2026-10-08",
+            "meal_type": "breakfast",
+            "food_summary": "手填餐",
+            "user_kcal": 350,
+        },
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["ai_kcal"] is None
+    assert body["user_kcal"] == 350
+    assert body["image_path"] is None
 
 
 def test_patch_meal_user_kcal(client, auth_header):
@@ -57,7 +75,7 @@ def test_patch_meal_user_kcal(client, auth_header):
 
 def test_estimate_meal(client, auth_header, monkeypatch):
     monkeypatch.setattr(
-        "backend.app.routers.meals.estimate_calories_from_image",
+        "backend.app.services.meal_ai.estimate_calories_from_image",
         lambda path: {"food_summary": "估卡餐", "kcal": 500, "advice": "ok"},
     )
     r = client.post(
@@ -70,6 +88,45 @@ def test_estimate_meal(client, auth_header, monkeypatch):
     assert body["kcal"] == 500
     assert body["food_summary"] == "估卡餐"
     assert body.get("image_path")
+    assert body.get("estimate_failed") is False
+
+
+def test_estimate_meal_ai_failure_keeps_image_path(client, auth_header, monkeypatch):
+    def _fail(_path):
+        from backend.app.services.meal_ai import MealAIError
+
+        raise MealAIError("vision unavailable")
+
+    monkeypatch.setattr(
+        "backend.app.services.meal_ai.estimate_calories_from_image",
+        _fail,
+    )
+    r = client.post(
+        "/api/meals/estimate",
+        headers=auth_header,
+        files={"file": ("meal.jpg", io.BytesIO(_tiny_jpeg()), "image/jpeg")},
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["estimate_failed"] is True
+    assert body["image_path"].startswith("dragon/")
+    assert body["food_summary"] == ""
+    assert body["kcal"] == 0
+
+
+def test_create_meal_rejects_other_users_image_path(client, auth_header):
+    r = client.post(
+        "/api/meals",
+        headers=auth_header,
+        json={
+            "date": "2026-10-08",
+            "meal_type": "lunch",
+            "food_summary": "偷图",
+            "user_kcal": 400,
+            "image_path": "leaf/deadbeef.jpg",
+        },
+    )
+    assert r.status_code == 403
 
 
 def test_cannot_patch_other_users_meal(client, auth_header, leaf_auth_header):

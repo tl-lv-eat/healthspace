@@ -28,6 +28,7 @@ class MealEstimateOut(BaseModel):
     kcal: int
     advice: str
     image_path: str
+    estimate_failed: bool = False
 
 
 class MealCreate(BaseModel):
