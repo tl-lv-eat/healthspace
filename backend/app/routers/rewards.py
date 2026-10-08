@@ -181,6 +181,10 @@ def create_reward(
     return _reward_to_out(row, reveal=True)
 
 
+def _is_price_only_patch(body: RewardPatch) -> bool:
+    return body.model_fields_set == {"points_price"} and body.points_price is not None
+
+
 @router.patch("/{reward_id}")
 def patch_reward(
     reward_id: int,
@@ -189,6 +193,12 @@ def patch_reward(
     db: Session = Depends(get_db),
 ) -> RewardOut:
     row = _get_reward_or_404(db, reward_id)
+    if _is_price_only_patch(body) and row.status in ("listed", "archived"):
+        row.points_price = body.points_price  # type: ignore[assignment]
+        db.commit()
+        db.refresh(row)
+        return _reward_to_out(row, reveal=True)
+
     if row.creator_user_id != user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your reward")
     if row.status not in ("pending_review", "rejected", "listed"):

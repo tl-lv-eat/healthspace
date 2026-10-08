@@ -237,3 +237,41 @@ def test_reward_catalog_scope_listed_and_archived(client, auth_header, partner_h
     statuses = {x["id"]: x["status"] for x in cat.json()}
     assert statuses[listed["id"]] == "listed"
     assert statuses[archived["id"]] == "archived"
+
+
+def test_partner_can_patch_listed_price_only(client, auth_header, partner_header):
+    rw = _create_reward(client, auth_header, title="改价", points_price=50)
+    _approve(client, partner_header, rw["id"])
+    p = client.patch(
+        f"/api/rewards/{rw['id']}",
+        headers=partner_header,
+        json={"points_price": 80},
+    )
+    assert p.status_code == 200
+    assert p.json()["points_price"] == 80
+    assert p.json()["title"] == "改价"
+
+
+def test_partner_cannot_patch_listed_title(client, auth_header, partner_header):
+    rw = _create_reward(client, auth_header, title="原名")
+    _approve(client, partner_header, rw["id"])
+    p = client.patch(
+        f"/api/rewards/{rw['id']}",
+        headers=partner_header,
+        json={"title": "盗改"},
+    )
+    assert p.status_code == 403
+
+
+def test_partner_can_patch_archived_price(client, auth_header, partner_header):
+    rw = _create_reward(client, auth_header, title="归档改价", points_price=30)
+    _approve(client, partner_header, rw["id"])
+    client.post(f"/api/rewards/{rw['id']}/archive", headers=auth_header)
+    p = client.patch(
+        f"/api/rewards/{rw['id']}",
+        headers=partner_header,
+        json={"points_price": 40},
+    )
+    assert p.status_code == 200
+    assert p.json()["points_price"] == 40
+    assert p.json()["status"] == "archived"
