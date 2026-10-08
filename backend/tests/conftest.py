@@ -10,11 +10,33 @@ from fastapi.testclient import TestClient
 
 from backend.app.settings import clear_settings_cache
 
+# Pin user passwords for auth tests so local config.yaml cannot break isolation.
+_TEST_APP_CONFIG = """\
+app:
+  users:
+    - id: dragon
+      password: dragon-pass
+      display_name: "🐉"
+      default_water_ml: 2000
+      role: member
+    - id: leaf
+      password: leaf-pass
+      display_name: "🍃"
+      default_water_ml: 2000
+      role: member
+"""
+
 
 @pytest.fixture
 def client(tmp_path) -> Generator[TestClient, None, None]:
     db_file = tmp_path / "test.db"
+    config_file = tmp_path / "test-config.yaml"
+    config_file.write_text(_TEST_APP_CONFIG, encoding="utf-8")
+
+    prior_db_url = os.environ.get("DATABASE_URL")
+    prior_config = os.environ.get("JIANFEI_CONFIG")
     os.environ["DATABASE_URL"] = f"sqlite:///{db_file.as_posix()}"
+    os.environ["JIANFEI_CONFIG"] = str(config_file)
     clear_settings_cache()
 
     from backend.app.db import init_db, rebind_engine
@@ -30,4 +52,12 @@ def client(tmp_path) -> Generator[TestClient, None, None]:
     finally:
         test_client.close()
 
-    clear_settings_cache()
+        if prior_db_url is None:
+            os.environ.pop("DATABASE_URL", None)
+        else:
+            os.environ["DATABASE_URL"] = prior_db_url
+        if prior_config is None:
+            os.environ.pop("JIANFEI_CONFIG", None)
+        else:
+            os.environ["JIANFEI_CONFIG"] = prior_config
+        clear_settings_cache()
