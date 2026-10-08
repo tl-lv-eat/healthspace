@@ -636,13 +636,14 @@ git commit -m "docs: add P0 runbook and tab shell placeholders"
 
 ---
 
-## Follow-up plans (not in this file)
+## Follow-up plans
 
-| 计划 | 内容 |
+| 计划 | 文件 |
 |------|------|
-| P1 | 身体周记、ECharts 对比、日历上下色块、周计划、日志 Tab |
-| P2 | 短长期目标、积分流水、奖励清单与兑奖 |
-| P3 | 日终/周报、AI 聊天、PushPlus 提醒 |
+| P1 | `docs/superpowers/plans/2026-10-08-couple-weight-loss-p1.md` |
+| P2 | `docs/superpowers/plans/2026-10-08-couple-weight-loss-p2.md` |
+| P3 | `docs/superpowers/plans/2026-10-08-couple-weight-loss-p3.md` |
+| 总索引 | `docs/superpowers/plans/README.md` |
 
 ---
 
