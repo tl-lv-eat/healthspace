@@ -21,7 +21,7 @@ export interface TodayWaterSummary {
   entries: WaterEntryBrief[]
 }
 
-export interface TodayEnergy {
+export interface DayEnergy {
   intake_kcal: number
   burn_kcal: number
   bmr: number
@@ -39,20 +39,20 @@ export interface TodayPlanBrief {
   end_date: string
 }
 
-export interface TodayDaySection {
+export interface DaySection {
   user_id: string
   display_name?: string
   meals: Meal[]
   water: TodayWaterSummary
   workouts: Workout[]
   done: DoneFlags
-  energy: TodayEnergy
+  energy: DayEnergy
   plan: TodayPlanBrief | null
 }
 
-export type TodayMe = TodayDaySection
+export type TodayMe = DaySection
 
-export type TodayPartner = TodayDaySection & { display_name: string }
+export type TodayPartner = DaySection & { display_name: string }
 
 export interface TodayResponse {
   date: string
