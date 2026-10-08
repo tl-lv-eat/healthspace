@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from backend.app.db import init_db
 from backend.app.routers import auth as auth_router
@@ -29,3 +32,8 @@ app.include_router(today_router.router, prefix="/api/today", tags=["today"])
 @app.on_event("startup")
 def on_startup() -> None:
     init_db()
+
+
+_frontend_dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+if _frontend_dist.is_dir():
+    app.mount("/", StaticFiles(directory=_frontend_dist, html=True), name="frontend")
