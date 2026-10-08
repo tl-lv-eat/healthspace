@@ -76,7 +76,18 @@ UI：设置页「积分结算」区块；积分页可「补结算昨天 / 指定
 
 `draft` 不需要（创建即进待审）→ `pending_review` → `listed` | `rejected` → 可再编辑后重新 `pending_review`。`archived` = 下架（创建者可操作）。
 
-字段：现有 title/description/points_price 等 + `status`、`reject_reason`、`reviewed_by`、`reviewed_at`。
+字段：现有 title/description/points_price 等 + `status`、`reject_reason`、`reviewed_by`、`reviewed_at` + **`category`**。
+
+**分类（必选，固定枚举）：**
+
+| 值 | 展示名 |
+|----|--------|
+| `food` | 饮食奖励 |
+| `fun` | 玩乐奖励 |
+| `intimacy` | 亲密奖励 |
+| `adult` | 18+奖励 |
+
+商城列表按分类筛选/分组；`adult` 类目前不做额外锁（双人私密 App，默认可直接浏览）。创建与审核流程与其它分类相同。
 
 仅 `listed` 可购买。列表：商城展示双方 `listed`；「待我审核」= 对方创建的 `pending_review`；「我的草稿/打回」= 自己的 pending/rejected。
 
@@ -117,7 +128,8 @@ Workout strength payload 增加必填 `duration_min`（≥1）。前端力量记
 - 日结三项幂等与分值可配置  
 - 运动分钟 = 有氧 + 力量 duration  
 - 计划三档 B/A/fail 与幂等  
-- 奖励：创建→打回→再提审→通过→购买→待用→已用  
+- 奖励：创建（含分类）→打回→再提审→通过→购买→待用→已用；按分类筛选  
+
 - 非 listed 不可买；余额不足拒绝  
 - Goal 路由移除后前端无死链  
 
