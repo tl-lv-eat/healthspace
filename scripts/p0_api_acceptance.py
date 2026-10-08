@@ -1,5 +1,17 @@
-"""P0 API-level acceptance (no browser, no vision)."""
+"""P0 API-level acceptance (no browser, no vision).
+
+Run from repo root:
+  set PYTHONPATH=.   (Windows) / export PYTHONPATH=.  (Unix)
+  python scripts/p0_api_acceptance.py
+"""
 from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from fastapi.testclient import TestClient
 
