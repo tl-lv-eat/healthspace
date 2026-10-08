@@ -4,11 +4,13 @@ import { useRoute, useRouter } from 'vue-router'
 import { closeToast, showFailToast, showLoadingToast } from 'vant'
 import WaterPanel from '@/components/WaterPanel.vue'
 import MealPanel from '@/components/MealPanel.vue'
+import { personaById } from '@/constants/personas'
 import { useAuthStore } from '@/stores/auth'
 import {
   fetchToday,
   formatDateLabel,
   formatDateLocal,
+  type DoneFlags,
   type TodayResponse,
 } from '@/api/today'
 import { fetchWaterDay, type WaterDay } from '@/api/water'
@@ -18,6 +20,7 @@ import { fetchReport, type AiReport } from '@/api/reports'
 const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
+
 function dateFromRoute(): string {
   const q = route.query.date
   if (typeof q === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(q)) return q
@@ -33,7 +36,7 @@ const reportExcerpt = computed(() => {
   const md = dailyReport.value?.content_md ?? ''
   if (!md) return ''
   const line = md.split('\n').find((l) => l.trim() && !l.startsWith('#'))
-  return (line ?? md).slice(0, 120)
+  return (line ?? md).slice(0, 100)
 })
 
 async function reload(withOverlay = false) {
@@ -80,65 +83,159 @@ function goWorkout() {
 const mealKcal = computed(() =>
   (today.value?.me.meals ?? []).reduce((s, m) => s + (m.user_kcal || 0), 0),
 )
+const partnerMealKcal = computed(() =>
+  (today.value?.partner.meals ?? []).reduce((s, m) => s + (m.user_kcal || 0), 0),
+)
 
-const doneCount = computed(() => {
-  const d = today.value?.me.done
+function doneScore(d?: DoneFlags) {
   if (!d) return 0
   return Number(d.meal) + Number(d.water) + Number(d.workout)
+}
+
+const meScore = computed(() => doneScore(today.value?.me.done))
+const partnerScore = computed(() => doneScore(today.value?.partner.done))
+const duoScore = computed(() => meScore.value + partnerScore.value)
+
+const mePersona = computed(() => personaById(today.value?.me.user_id ?? auth.user?.id))
+const partnerPersona = computed(() => personaById(today.value?.partner.user_id))
+
+const items = [
+  { key: 'meal' as const, label: '饮食', short: '吃' },
+  { key: 'water' as const, label: '饮水', short: '水' },
+  { key: 'workout' as const, label: '运动', short: '练' },
+]
+
+const hourHint = computed(() => {
+  const h = new Date().getHours()
+  if (h < 11) return '早上好'
+  if (h < 14) return '中午好'
+  if (h < 18) return '下午好'
+  return '晚上好'
 })
 </script>
 
 <template>
   <div class="today">
-    <header class="today__top">
-      <div>
-        <p class="today__hello">Hi, {{ auth.user?.display_name ?? '—' }}</p>
-        <h1 class="today__date">{{ formatDateLabel(date) }}</h1>
+    <!-- Duo hero: both personas at a glance -->
+    <section class="duo" :class="`duo--${auth.user?.id ?? 'leaf'}`">
+      <div class="duo__glow" aria-hidden="true" />
+      <header class="duo__head">
+        <div>
+          <p class="duo__greet">{{ hourHint }}，{{ auth.user?.display_name ?? '—' }}</p>
+          <h1 class="duo__date">{{ formatDateLabel(date) }}</h1>
+        </div>
+        <div class="duo__ring" :style="{ '--p': `${(duoScore / 6) * 100}%` }">
+          <span class="duo__ring-n">{{ duoScore }}</span>
+          <span class="duo__ring-d">/6</span>
+        </div>
+      </header>
+
+      <div v-if="today" class="duo__rails">
+        <article class="rail" :class="`rail--${today.me.user_id}`">
+          <div class="rail__who">
+            <span class="rail__emoji">{{ mePersona?.emoji }}</span>
+            <div>
+              <p class="rail__name">{{ auth.user?.display_name }}</p>
+              <p class="rail__tag">我 · {{ meScore }}/3</p>
+            </div>
+          </div>
+          <ul class="rail__checks">
+            <li
+              v-for="it in items"
+              :key="it.key"
+              class="check"
+              :class="{ 'check--on': today.me.done[it.key] }"
+            >
+              <span class="check__mark">{{ today.me.done[it.key] ? '✓' : '·' }}</span>
+              <span class="check__label">{{ it.label }}</span>
+            </li>
+          </ul>
+          <div class="rail__metrics">
+            <div>
+              <span class="rail__m-k">kcal</span>
+              <strong>{{ mealKcal }}</strong>
+            </div>
+            <div>
+              <span class="rail__m-k">水</span>
+              <strong>{{ waterDay?.total_ml ?? today.me.water.total_ml }}</strong>
+            </div>
+            <div>
+              <span class="rail__m-k">练</span>
+              <strong>{{ today.me.workouts.length }}</strong>
+            </div>
+          </div>
+        </article>
+
+        <div class="duo__vs" aria-hidden="true">
+          <span>双</span>
+        </div>
+
+        <article class="rail" :class="`rail--${today.partner.user_id}`">
+          <div class="rail__who">
+            <span class="rail__emoji">{{ partnerPersona?.emoji }}</span>
+            <div>
+              <p class="rail__name">{{ today.partner.display_name }}</p>
+              <p class="rail__tag">对方 · {{ partnerScore }}/3</p>
+            </div>
+          </div>
+          <ul class="rail__checks">
+            <li
+              v-for="it in items"
+              :key="it.key"
+              class="check"
+              :class="{ 'check--on': today.partner.done[it.key] }"
+            >
+              <span class="check__mark">{{ today.partner.done[it.key] ? '✓' : '·' }}</span>
+              <span class="check__label">{{ it.label }}</span>
+            </li>
+          </ul>
+          <div class="rail__metrics">
+            <div>
+              <span class="rail__m-k">kcal</span>
+              <strong>{{ partnerMealKcal }}</strong>
+            </div>
+            <div>
+              <span class="rail__m-k">水</span>
+              <strong>{{ today.partner.water.total_ml }}</strong>
+            </div>
+            <div>
+              <span class="rail__m-k">练</span>
+              <strong>{{ today.partner.workouts.length }}</strong>
+            </div>
+          </div>
+        </article>
       </div>
-      <div class="today__ring" :style="{ '--p': `${(doneCount / 3) * 100}%` }">
-        <span>{{ doneCount }}/3</span>
-      </div>
-    </header>
+
+      <p v-else class="duo__loading">同步今日进度…</p>
+    </section>
 
     <router-link
       v-if="dailyReport"
       :to="{ name: 'report', query: { kind: 'daily', period: date } }"
-      class="today__report fit-card"
+      class="today__report"
     >
-      <p class="fit-section-label">AI 日报告</p>
-      <p class="today__report-text">{{ reportExcerpt }}…</p>
+      <div>
+        <p class="fit-section-label">今日报告</p>
+        <p class="today__report-text">{{ reportExcerpt }}…</p>
+      </div>
+      <span class="today__report-go">→</span>
     </router-link>
 
-    <div v-if="today" class="today__partner fit-card">
-      <div class="today__partner-head">
-        <span class="today__partner-name">{{ today.partner.display_name }}</span>
-        <span class="today__partner-sub">对方今日</span>
-      </div>
-      <div class="today__dots">
-        <span :class="{ on: today.partner.done.meal }">饮食</span>
-        <span :class="{ on: today.partner.done.water }">饮水</span>
-        <span :class="{ on: today.partner.done.workout }">运动</span>
-      </div>
-      <p class="today__partner-water">
-        {{ today.partner.water_total_ml }} / {{ today.partner.water_target_ml }} ml
-      </p>
-    </div>
-
     <div class="today__stats">
-      <div class="stat fit-card">
-        <p class="stat__k">摄入</p>
+      <div class="stat">
+        <p class="stat__k">我的摄入</p>
         <p class="stat__v cal">{{ mealKcal }}</p>
         <p class="stat__u">kcal</p>
       </div>
-      <div class="stat fit-card">
-        <p class="stat__k">饮水</p>
+      <div class="stat">
+        <p class="stat__k">我的饮水</p>
         <p class="stat__v water">{{ waterDay?.total_ml ?? 0 }}</p>
-        <p class="stat__u">ml</p>
+        <p class="stat__u">/ {{ waterDay?.target_ml ?? '—' }} ml</p>
       </div>
-      <div class="stat fit-card">
-        <p class="stat__k">运动</p>
+      <div class="stat">
+        <p class="stat__k">我的运动</p>
         <p class="stat__v work">{{ today?.me.workouts.length ?? 0 }}</p>
-        <p class="stat__u">条</p>
+        <p class="stat__u">条记录</p>
       </div>
     </div>
 
@@ -153,21 +250,24 @@ const doneCount = computed(() => {
             @changed="reload()"
           />
           <MealPanel :date="date" :meals="today.me.meals" @changed="reload()" />
-          <section class="workout-block fit-card fit-card-pad">
-            <header class="workout-block__head">
+          <section class="workout-panel">
+            <header class="workout-panel__head">
               <div>
-                <p class="fit-section-label">Workout</p>
+                <p class="fit-section-label">Movement</p>
                 <h2>今日运动</h2>
+                <p class="workout-panel__sub">
+                  {{ today.me.workouts.length ? `已记 ${today.me.workouts.length} 条` : '还没动起来' }}
+                </p>
               </div>
-              <button type="button" class="workout-block__cta" @click="goWorkout">去记录</button>
+              <button type="button" class="workout-panel__cta" @click="goWorkout">记录</button>
             </header>
-            <ul v-if="today.me.workouts.length" class="workout-block__list">
+            <ul v-if="today.me.workouts.length" class="workout-panel__list">
               <li v-for="w in today.me.workouts" :key="w.id">
                 <span>{{ formatWorkoutSummary(w) }}</span>
                 <time>{{ w.created_at.slice(11, 16) }}</time>
               </li>
             </ul>
-            <p v-else class="empty">还没有运动 — 点右上角开始</p>
+            <p v-else class="empty">点右上角用弹窗快速记有氧 / 力量</p>
           </section>
         </template>
         <van-empty v-else description="暂无数据" />
@@ -178,137 +278,330 @@ const doneCount = computed(() => {
 
 <style scoped>
 .today {
-  min-height: 100vh;
-  padding: 20px 16px 28px;
+  min-height: 100%;
+  padding: 8px 14px 28px;
 }
 
-.today__top {
+.duo {
+  position: relative;
+  overflow: hidden;
+  border-radius: 28px;
+  padding: 20px 16px 18px;
+  margin-bottom: 14px;
+  color: var(--ink);
+  background:
+    linear-gradient(155deg, color-mix(in srgb, var(--primary) 18%, var(--card)) 0%, var(--card) 48%),
+    var(--card);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  animation: duo-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.duo__glow {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  right: -40px;
+  top: -50px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--hero-glow), transparent 70%);
+  pointer-events: none;
+}
+
+.duo__head {
+  position: relative;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 18px;
 }
 
-.today__hello {
+.duo__greet {
   margin: 0;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--muted);
 }
 
-.today__date {
-  margin: 4px 0 0;
-  font-size: 1.65rem;
-  font-weight: 800;
+.duo__date {
+  margin: 6px 0 0;
+  font-size: clamp(1.35rem, 5.5vw, 1.7rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
-.today__ring {
-  width: 58px;
-  height: 58px;
+.duo__ring {
+  flex-shrink: 0;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  background:
+    radial-gradient(circle at center, var(--card) 56%, transparent 57%),
+    conic-gradient(var(--primary) var(--p), var(--line) 0);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+.duo__ring-n {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.duo__ring-d {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.duo__rails {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.duo__vs {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 800;
-  background:
-    radial-gradient(circle at center, var(--bg) 58%, transparent 59%),
-    conic-gradient(var(--primary) var(--p), var(--line) 0);
-  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--primary);
+  z-index: 2;
+  box-shadow: var(--shadow-sm);
+}
+
+.rail {
+  position: relative;
+  padding: 12px 10px 12px;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--bg) 65%, transparent);
+  border: 1px solid var(--line);
+  animation: rail-in 0.5s ease both;
+}
+
+.rail:nth-child(3) {
+  animation-delay: 0.08s;
+}
+
+.rail--dragon {
+  background: linear-gradient(160deg, rgba(24, 26, 31, 0.92), rgba(30, 26, 22, 0.88));
+  border-color: rgba(232, 196, 138, 0.22);
+  color: #f3efe8;
+}
+
+.rail--dragon .rail__tag,
+.rail--dragon .rail__m-k,
+.rail--dragon .check:not(.check--on) .check__label {
+  color: #9a948a;
+}
+
+.rail--dragon .check {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.rail--dragon .check--on {
+  background: rgba(232, 196, 138, 0.16);
+  color: #e8c48a;
+}
+
+.rail--leaf {
+  background: linear-gradient(160deg, rgba(255, 240, 246, 0.95), rgba(255, 250, 251, 0.9));
+  border-color: rgba(232, 93, 142, 0.22);
+  color: #2a1820;
+}
+
+.rail--leaf .check--on {
+  background: rgba(232, 93, 142, 0.14);
+  color: #c94474;
+}
+
+html[data-persona='dragon'] .rail--leaf {
+  background: linear-gradient(160deg, rgba(60, 30, 42, 0.55), rgba(40, 24, 32, 0.7));
+  border-color: rgba(232, 93, 142, 0.28);
+  color: #fce8f0;
+}
+
+html[data-persona='dragon'] .rail--leaf .rail__tag,
+html[data-persona='dragon'] .rail--leaf .rail__m-k {
+  color: #c9a0b0;
+}
+
+html[data-persona='leaf'] .rail--dragon {
+  background: linear-gradient(160deg, #1a1c22, #14151a);
+  border-color: rgba(232, 196, 138, 0.28);
+}
+
+.rail__who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.rail__emoji {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.rail__name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.rail__tag {
+  margin: 2px 0 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.rail__checks {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--line) 55%, transparent);
+  color: var(--muted);
+}
+
+.check--on {
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+}
+
+.check__mark {
+  width: 12px;
+  text-align: center;
+  font-family: var(--font-display);
+}
+
+.rail__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding-top: 8px;
+  border-top: 1px dashed color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.rail__metrics > div {
+  text-align: center;
+}
+
+.rail__m-k {
+  display: block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.rail__metrics strong {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.duo__loading {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--muted);
 }
 
 .today__report {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 14px 16px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   text-decoration: none;
   color: inherit;
+  border-radius: var(--radius);
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
 }
 
 .today__report-text {
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   font-size: 13px;
   line-height: 1.45;
   color: var(--muted);
   font-weight: 600;
 }
 
-.today__partner {
-  padding: 14px 16px;
-  margin-bottom: 14px;
-}
-
-.today__partner-head {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.today__partner-name {
-  font-family: var(--font-display);
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.today__partner-sub {
-  font-size: 12px;
-  color: var(--muted);
-  font-weight: 600;
-}
-
-.today__dots {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.today__dots span {
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  background: var(--bg);
-  color: var(--muted);
-}
-
-.today__dots span.on {
+.today__report-go {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
   background: var(--primary-soft);
   color: var(--primary-dark);
-}
-
-.today__partner-water {
-  margin: 10px 0 0;
-  font-size: 12px;
-  color: var(--water);
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .today__stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-bottom: 18px;
+  gap: 8px;
+  margin-bottom: 16px;
 }
 
 .stat {
-  padding: 14px 10px;
+  padding: 14px 8px;
   text-align: center;
+  border-radius: 18px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
 }
 
 .stat__k {
   margin: 0;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--muted);
 }
 
 .stat__v {
   margin: 6px 0 0;
   font-family: var(--font-display);
-  font-size: 1.35rem;
-  font-weight: 800;
+  font-size: 1.25rem;
+  font-weight: 700;
   line-height: 1;
 }
 
@@ -319,55 +612,64 @@ const doneCount = computed(() => {
   color: var(--water);
 }
 .stat__v.work {
-  color: #e67700;
+  color: var(--workout);
 }
 
 .stat__u {
   margin: 4px 0 0;
-  font-size: 11px;
+  font-size: 10px;
   color: var(--muted);
   font-weight: 600;
 }
 
-.today__body {
-  padding-bottom: 8px;
+.workout-panel {
+  margin-bottom: 14px;
+  padding: 18px 16px;
+  border-radius: 24px;
+  background:
+    linear-gradient(155deg, color-mix(in srgb, var(--workout) 14%, var(--card)), var(--card) 52%);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
 }
 
-.workout-block {
-  margin-top: 4px;
-}
-
-.workout-block__head {
+.workout-panel__head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 12px;
 }
 
-.workout-block__head h2 {
+.workout-panel__head h2 {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 800;
+  font-size: 1.2rem;
+  font-weight: 700;
 }
 
-.workout-block__cta {
+.workout-panel__sub {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.workout-panel__cta {
   border: none;
   background: var(--workout-soft);
-  color: #e67700;
+  color: var(--workout);
   font-weight: 800;
   font-size: 13px;
-  padding: 10px 14px;
-  border-radius: 12px;
+  padding: 10px 16px;
+  border-radius: 999px;
   cursor: pointer;
 }
 
-.workout-block__list {
+.workout-panel__list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.workout-block__list li {
+.workout-panel__list li {
   display: flex;
   justify-content: space-between;
   gap: 12px;
@@ -377,7 +679,7 @@ const doneCount = computed(() => {
   font-weight: 600;
 }
 
-.workout-block__list time {
+.workout-panel__list time {
   color: var(--muted);
   font-size: 12px;
   flex-shrink: 0;
@@ -388,5 +690,27 @@ const doneCount = computed(() => {
   font-size: 13px;
   color: var(--muted);
   font-weight: 500;
+}
+
+@keyframes duo-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes rail-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 </style>
