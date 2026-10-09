@@ -68,14 +68,14 @@ def _default_users() -> list[UserConfig]:
         UserConfig(
             id="dragon",
             password="dragon-pass",
-            display_name="🐉",
+            display_name="龙龙",
             default_water_ml=2000,
             role="member",
         ),
         UserConfig(
             id="leaf",
             password="leaf-pass",
-            display_name="🍃",
+            display_name="孙孙",
             default_water_ml=2000,
             role="member",
         ),

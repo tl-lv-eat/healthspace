@@ -125,13 +125,22 @@ const waterTargetMl = computed(
 )
 
 const energySurplusTip = computed(() => {
-  const s = meEnergy.value?.surplus_kcal ?? 0
+  const e = meEnergy.value
+  if (!e) return '—'
+  if (e.empty) return '未记录'
+  if (!e.meals_complete) return '饮食未记齐'
+  const s = e.surplus_kcal ?? 0
   if (s > 0) return `盈余 +${s}`
   if (s < 0) return `缺口 ${Math.abs(s)}`
   return '持平 0'
 })
 
-const deficitContribKcal = computed(() => Math.max(0, -(meEnergy.value?.surplus_kcal ?? 0)))
+const deficitContribKcal = computed(() => {
+  const e = meEnergy.value
+  if (!e || e.empty || !e.meals_complete) return 0
+  if (typeof e.deficit_contrib === 'number') return Math.max(0, e.deficit_contrib)
+  return Math.max(0, -(e.surplus_kcal ?? 0))
+})
 
 const intakeOverCap = computed(() => {
   const e = meEnergy.value
@@ -274,7 +283,13 @@ const intakeOverCapBy = computed(() => {
     <details v-if="meEnergy" class="energy-ledger">
       <summary class="energy-ledger__sum">
         <span class="energy-ledger__title">能量账本</span>
-        <span class="energy-ledger__badge">{{ energySurplusTip }} kcal</span>
+        <span class="energy-ledger__badge">
+          {{
+            meEnergy.empty || !meEnergy.meals_complete
+              ? energySurplusTip
+              : `${energySurplusTip} kcal`
+          }}
+        </span>
       </summary>
       <div class="energy-ledger__body">
         <dl class="energy-ledger__grid">
@@ -295,7 +310,13 @@ const intakeOverCapBy = computed(() => {
             <dd>{{ energySurplusTip }}</dd>
           </div>
         </dl>
-        <p class="energy-ledger__eq">
+        <p v-if="meEnergy.empty" class="energy-ledger__eq energy-ledger__soft">
+          今天还没记餐/水/运动，缺口贡献按 0 计（不算进计划进度）
+        </p>
+        <p v-else-if="!meEnergy.meals_complete" class="energy-ledger__eq energy-ledger__soft">
+          早午晚记齐后才计算热量缺口；当前缺口贡献 0
+        </p>
+        <p v-else class="energy-ledger__eq">
           {{ meEnergy.intake_kcal }} − {{ meEnergy.burn_kcal }} − {{ meEnergy.bmr }} =
           {{ energySurplusTip }} kcal
         </p>
@@ -307,7 +328,11 @@ const intakeOverCapBy = computed(() => {
             <strong>{{ deficitContribKcal }}</strong>
             kcal
             <span
-              v-if="meEnergy.daily_deficit_target > 0 && deficitContribKcal < meEnergy.daily_deficit_target"
+              v-if="
+                meEnergy.meals_complete &&
+                meEnergy.daily_deficit_target > 0 &&
+                deficitContribKcal < meEnergy.daily_deficit_target
+              "
               class="energy-ledger__soft"
             >
               （还差 {{ meEnergy.daily_deficit_target - deficitContribKcal }}）

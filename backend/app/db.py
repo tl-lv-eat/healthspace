@@ -59,12 +59,12 @@ def _hash_password(plain: str) -> str:
 
 _LEGACY_DISPLAY_NAMES = {
     "dragon": {"🐉", "Dragon"},
-    "leaf": {"🍃", "Leaf"},
+    "leaf": {"🍃", "Leaf", "叶子"},
 }
 
 
 def _ensure_user_profile_columns() -> None:
-    """SQLite additive migrate for user sex/age (BMR)."""
+    """SQLite additive migrate for user sex/age/bmr_kcal."""
     if not str(engine.url).startswith("sqlite"):
         return
     with engine.begin() as conn:
@@ -75,6 +75,8 @@ def _ensure_user_profile_columns() -> None:
             alters.append("ALTER TABLE users ADD COLUMN sex VARCHAR(16)")
         if "age" not in existing:
             alters.append("ALTER TABLE users ADD COLUMN age INTEGER")
+        if "bmr_kcal" not in existing:
+            alters.append("ALTER TABLE users ADD COLUMN bmr_kcal INTEGER")
         for sql in alters:
             conn.exec_driver_sql(sql)
 

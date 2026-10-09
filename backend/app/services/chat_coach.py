@@ -64,7 +64,7 @@ def chat_reply(db: Session, user: User, message: str) -> str:
     messages.append({"role": "user", "content": text})
 
     try:
-        result = call_llm.responses_chat_messages(messages, stream=False)
+        result = call_llm.responses_chat_messages(messages, enable_thinking=False)
         reply = (result.text or "").strip()
     except Exception as exc:
         raise ChatError(str(exc)) from exc

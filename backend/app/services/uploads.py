@@ -24,19 +24,23 @@ def meal_upload_root() -> Path:
 
 def save_meal_image(file: UploadFile, user_id: str) -> str:
     raw = file.file.read()
-    if len(raw) > MAX_MEAL_IMAGE_BYTES:
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail="Image must be at most 5MB",
-        )
     if not raw:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Empty file")
+    # Allow slightly larger camera originals; we recompress to JPEG below.
+    if len(raw) > 20 * 1024 * 1024:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="图片过大（超过 20MB），请压缩后再传",
+        )
 
     try:
         img = Image.open(BytesIO(raw))
         img.load()
     except OSError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid image") from exc
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="无法识别图片格式（iPhone 请用相册导出 JPG，或在 App 内由浏览器转换后再传）",
+        ) from exc
 
     if img.mode not in ("RGB", "L"):
         img = img.convert("RGB")
@@ -52,6 +56,10 @@ def save_meal_image(file: UploadFile, user_id: str) -> str:
     user_dir.mkdir(parents=True, exist_ok=True)
     filename = f"{uuid.uuid4().hex}.jpg"
     dest = user_dir / filename
-    img.save(dest, format="JPEG", quality=85, optimize=True)
+    quality = 85
+    img.save(dest, format="JPEG", quality=quality, optimize=True)
+    while dest.stat().st_size > MAX_MEAL_IMAGE_BYTES and quality > 50:
+        quality -= 10
+        img.save(dest, format="JPEG", quality=quality, optimize=True)
 
     return f"{user_id}/{filename}"

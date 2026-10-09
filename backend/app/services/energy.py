@@ -10,20 +10,13 @@ from backend.app.models import BodyMetric, User
 
 
 DEFAULT_PROFILES = {
-    "dragon": {"sex": "male", "age": 28, "weight_kg": 75.0, "height_cm": 175.0},
-    "leaf": {"sex": "female", "age": 28, "weight_kg": 55.0, "height_cm": 162.0},
+    "dragon": {"sex": "male", "age": 28, "weight_kg": 75.0, "height_cm": 175.0, "bmr_kcal": 1700},
+    "leaf": {"sex": "female", "age": 28, "weight_kg": 55.0, "height_cm": 162.0, "bmr_kcal": 1400},
 }
 
 
-def mifflin_st_jeor_bmr(*, sex: str, weight_kg: float, height_cm: float, age: int) -> int:
-    """Resting energy expenditure (kcal/day)."""
-    base = 10.0 * weight_kg + 6.25 * height_cm - 5.0 * age
-    if sex == "female":
-        return max(900, int(round(base - 161)))
-    return max(1100, int(round(base + 5)))
-
-
 def resolve_body_profile(user: User, db: Session) -> dict:
+    """Weight/height/sex for achievements (BMI etc.); BMR is separate user field."""
     defaults = DEFAULT_PROFILES.get(user.id, DEFAULT_PROFILES["dragon"])
     sex = getattr(user, "sex", None) or defaults["sex"]
     age = int(getattr(user, "age", None) or defaults["age"])
@@ -43,14 +36,14 @@ def resolve_body_profile(user: User, db: Session) -> dict:
     return {"sex": sex, "age": age, "weight_kg": weight, "height_cm": height}
 
 
-def user_bmr(user: User, db: Session) -> int:
-    p = resolve_body_profile(user, db)
-    return mifflin_st_jeor_bmr(
-        sex=p["sex"],
-        weight_kg=p["weight_kg"],
-        height_cm=p["height_cm"],
-        age=p["age"],
-    )
+def user_bmr(user: User, db: Session | None = None) -> int:
+    """User-entered daily BMR (kcal). Falls back to persona default if unset."""
+    del db  # kept for call-site compatibility
+    stored = getattr(user, "bmr_kcal", None)
+    if stored is not None and int(stored) > 0:
+        return int(stored)
+    defaults = DEFAULT_PROFILES.get(user.id, DEFAULT_PROFILES["dragon"])
+    return int(defaults["bmr_kcal"])
 
 
 def estimate_workout_burn_kcal(workouts: list[dict]) -> int:
@@ -82,11 +75,13 @@ def daily_energy_snapshot(
     water_target_ml: int,
     weekly_kcal_deficit: int,
     period_days: int = 7,
+    meals_complete: bool = True,
 ) -> dict:
     """
     Linkage: period deficit is split evenly across period_days as a soft daily target.
 
     calorie_exceeded ⇔ intake - burn - BMR > 0  (net surplus)
+    Deficit / calorie_ok only after meals_complete (plan meal_mode, default 早午晚).
     water_ok ⇔ water_ml >= water_target_ml
 
     Day level (calendar color):
@@ -97,14 +92,15 @@ def daily_energy_snapshot(
     burn = estimate_workout_burn_kcal(workouts)
     surplus = int(intake_kcal) - burn - int(bmr)
     calorie_exceeded = surplus > 0
-    calorie_ok = not calorie_exceeded
     water_ok = int(water_ml) >= int(water_target_ml)
     days = max(1, int(period_days or 7))
     daily_deficit_target = max(0, int(weekly_kcal_deficit or 0) // days)
-    # actual daily deficit contribution (positive = good for fat loss)
-    deficit_contrib = max(0, -surplus)
-
     empty = int(intake_kcal) == 0 and int(water_ml) == 0 and burn == 0
+    complete = bool(meals_complete) and not empty
+    # Incomplete meals: do not credit BMR-only or partial-day intake as plan deficit.
+    calorie_ok = complete and not calorie_exceeded
+    deficit_contrib = max(0, -surplus) if complete else 0
+
     if empty:
         level = "none"
     elif water_ok and calorie_ok:
@@ -126,6 +122,7 @@ def daily_energy_snapshot(
         "water_ok": water_ok,
         "daily_deficit_target": daily_deficit_target,
         "deficit_contrib": deficit_contrib,
+        "meals_complete": complete,
         "had_workout": burn > 0 or any(True for _ in workouts),
         "level": level,
         # legacy flags kept for older UI/tests

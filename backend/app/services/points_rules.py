@@ -54,7 +54,6 @@ def evaluate_daily_points(
     intake = int(status.get("intake_kcal") or 0)
     water_ml = int(status.get("water_ml") or 0)
     burn = int(status.get("burn_kcal") or 0)
-    surplus = int(status.get("surplus_kcal") or 0)
     water_ok = bool(status.get("water_ok"))
 
     empty = intake == 0 and water_ml == 0 and burn == 0 and len(workouts) == 0
@@ -74,8 +73,7 @@ def evaluate_daily_points(
             db, user_id, day_str, "daily_water", settings.points_daily_water, grants
         )
 
-    has_calorie_activity = intake > 0 or burn > 0
-    if has_calorie_activity and surplus <= 0:
+    if int(status.get("deficit_contrib") or 0) > 0:
         delta_total += _grant_daily_item(
             db, user_id, day_str, "daily_deficit", settings.points_daily_deficit, grants
         )

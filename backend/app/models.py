@@ -20,6 +20,7 @@ class User(Base):
     role: Mapped[str] = mapped_column(String(32), nullable=False, default="member")
     sex: Mapped[str | None] = mapped_column(String(16), nullable=True)
     age: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    bmr_kcal: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     meals: Mapped[list[Meal]] = relationship(back_populates="user")
     water_entries: Mapped[list[WaterEntry]] = relationship(back_populates="user")

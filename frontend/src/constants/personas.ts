@@ -1,6 +1,6 @@
 export const PERSONAS = [
   { id: 'dragon', emoji: '🐉', label: '龙龙' },
-  { id: 'leaf', emoji: '🍃', label: '叶子' },
+  { id: 'leaf', emoji: '🍃', label: '孙孙' },
 ] as const
 
 export type PersonaId = (typeof PERSONAS)[number]['id']

@@ -26,6 +26,11 @@ export interface DayEnergy {
   burn_kcal: number
   bmr: number
   surplus_kcal: number
+  /** Plan progress credit; 0 until meals are complete (default 早午晚). */
+  deficit_contrib?: number
+  meals_complete?: boolean
+  /** No meal / water / workout logged. */
+  empty?: boolean
   daily_deficit_target: number
   daily_kcal_cap: number | null
   water_target_ml: number

@@ -79,6 +79,9 @@ def test_today_includes_energy_and_water_entries(client, auth_header):
         "burn_kcal",
         "bmr",
         "surplus_kcal",
+        "deficit_contrib",
+        "meals_complete",
+        "empty",
         "daily_deficit_target",
         "daily_kcal_cap",
         "water_target_ml",
@@ -86,6 +89,9 @@ def test_today_includes_energy_and_water_entries(client, auth_header):
     ):
         assert k in e
     assert e["intake_kcal"] == 400
+    assert e["empty"] is False
+    assert e["meals_complete"] is False
+    assert e["deficit_contrib"] == 0
     assert e["water_target_ml"] == 2000
     assert "entries" in me["water"]
     assert len(me["water"]["entries"]) == 1

@@ -69,6 +69,48 @@ def test_workout_delete_and_ownership(client, auth_header, leaf_auth_header):
     assert listed.json() == []
 
 
+def test_patch_cardio_and_strength(client, auth_header):
+    cardio = client.post(
+        "/api/workouts",
+        headers=auth_header,
+        json={
+            "date": "2026-10-10",
+            "kind": "cardio",
+            "cardio_type": "run",
+            "duration_min": 20,
+        },
+    ).json()
+    patched = client.patch(
+        f"/api/workouts/{cardio['id']}",
+        headers=auth_header,
+        json={"duration_min": 35, "intensity": "hard"},
+    )
+    assert patched.status_code == 200
+    assert patched.json()["payload"]["duration_min"] == 35
+    assert patched.json()["payload"]["intensity"] == "hard"
+
+    strength = client.post(
+        "/api/workouts",
+        headers=auth_header,
+        json={
+            "date": "2026-10-10",
+            "kind": "strength",
+            "body_part": "bodyweight",
+            "exercise_name": "标准俯卧撑",
+            "duration_min": 15,
+            "sets": [{"reps": 10}, {"reps": 10}],
+        },
+    ).json()
+    patched_s = client.patch(
+        f"/api/workouts/{strength['id']}",
+        headers=auth_header,
+        json={"exercise_name": "宽距俯卧撑", "sets": [{"reps": 12}, {"reps": 12}, {"reps": 12}]},
+    )
+    assert patched_s.status_code == 200
+    assert patched_s.json()["payload"]["exercise_name"] == "宽距俯卧撑"
+    assert len(patched_s.json()["payload"]["sets"]) == 3
+
+
 def test_list_exercises_and_custom(client, auth_header):
     r = client.get("/api/exercises", headers=auth_header, params={"body_part": "chest"})
     assert r.status_code == 200

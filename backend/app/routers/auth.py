@@ -74,6 +74,13 @@ def update_me(
         current_user.sex = body.sex
     if body.age is not None and isinstance(body.age, int) and 10 <= body.age <= 100:
         current_user.age = body.age
+    if body.bmr_kcal is not None:
+        if not isinstance(body.bmr_kcal, int) or not (800 <= body.bmr_kcal <= 4000):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="bmr_kcal must be an integer between 800 and 4000",
+            )
+        current_user.bmr_kcal = body.bmr_kcal
     db.add(current_user)
     db.commit()
     db.refresh(current_user)

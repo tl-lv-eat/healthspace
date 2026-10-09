@@ -109,6 +109,7 @@ def build_day_section(
         water_target_ml=target_ml,
         weekly_kcal_deficit=rules["weekly_kcal_deficit"],
         period_days=rules.get("period_days") or 7,
+        meals_complete=done["meal"],
     )
 
     section: dict = {
@@ -127,6 +128,12 @@ def build_day_section(
             "burn_kcal": snap["burn_kcal"],
             "bmr": snap["bmr"],
             "surplus_kcal": snap["surplus_kcal"],
+            "deficit_contrib": snap["deficit_contrib"],
+            "meals_complete": snap["meals_complete"],
+            "empty": snap["level"] == "none"
+            and snap["intake_kcal"] == 0
+            and snap["burn_kcal"] == 0
+            and snap["water_ml"] == 0,
             "daily_deficit_target": snap["daily_deficit_target"],
             "daily_kcal_cap": rules.get("daily_kcal_cap"),
             "water_target_ml": rules["water_target_ml"],

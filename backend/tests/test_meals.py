@@ -14,7 +14,12 @@ def _tiny_jpeg() -> bytes:
 def test_create_meal_and_list(client, auth_header, monkeypatch):
     monkeypatch.setattr(
         "backend.app.services.meal_ai.estimate_calories_from_image",
-        lambda path: {"food_summary": "测试餐", "kcal": 500, "advice": "ok"},
+        lambda path: {
+            "food_summary": "测试餐",
+            "kcal": 500,
+            "reason": "测试依据",
+            "advice": "ok",
+        },
     )
     r = client.post(
         "/api/meals",
@@ -76,7 +81,12 @@ def test_patch_meal_user_kcal(client, auth_header):
 def test_estimate_meal(client, auth_header, monkeypatch):
     monkeypatch.setattr(
         "backend.app.services.meal_ai.estimate_calories_from_image",
-        lambda path: {"food_summary": "估卡餐", "kcal": 500, "advice": "ok"},
+        lambda path: {
+            "food_summary": "估卡餐",
+            "kcal": 500,
+            "reason": "目测一碗面约500",
+            "advice": "少油少酱",
+        },
     )
     r = client.post(
         "/api/meals/estimate",
@@ -87,8 +97,51 @@ def test_estimate_meal(client, auth_header, monkeypatch):
     body = r.json()
     assert body["kcal"] == 500
     assert body["food_summary"] == "估卡餐"
+    assert "500" in body["reason"]
     assert body.get("image_path")
     assert body.get("estimate_failed") is False
+
+
+def test_refine_meal_estimate(client, auth_header, monkeypatch):
+    monkeypatch.setattr(
+        "backend.app.services.meal_ai.refine_calories_estimate",
+        lambda **kwargs: {
+            "food_summary": "大份面",
+            "kcal": 680,
+            "reason": "用户说份量更大",
+            "advice": "分两次吃",
+        },
+    )
+    r = client.post(
+        "/api/meals/estimate/refine",
+        headers=auth_header,
+        json={
+            "food_summary": "面",
+            "kcal": 500,
+            "reason": "一碗",
+            "advice": "控油",
+            "message": "其实是大碗",
+        },
+    )
+    assert r.status_code == 200
+    assert r.json()["kcal"] == 680
+
+
+def test_delete_meal(client, auth_header):
+    created = client.post(
+        "/api/meals",
+        headers=auth_header,
+        json={
+            "date": "2026-10-08",
+            "meal_type": "snack",
+            "food_summary": "酸奶",
+            "user_kcal": 120,
+        },
+    ).json()
+    r = client.delete(f"/api/meals/{created['id']}", headers=auth_header)
+    assert r.status_code == 204
+    listed = client.get("/api/meals", headers=auth_header, params={"date": "2026-10-08"})
+    assert listed.json() == []
 
 
 def test_estimate_meal_ai_failure_keeps_image_path(client, auth_header, monkeypatch):

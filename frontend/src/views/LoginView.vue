@@ -32,7 +32,7 @@ async function pick(id: PersonaId) {
 <template>
   <div class="login">
     <div class="login__hero">
-      <p class="login__eyebrow">龙龙 × 叶子</p>
+      <p class="login__eyebrow">龙龙 × 孙孙</p>
       <h1 class="login__brand">健康space🐉🍃</h1>
       <p class="login__tagline">选一下现在是谁在记</p>
     </div>

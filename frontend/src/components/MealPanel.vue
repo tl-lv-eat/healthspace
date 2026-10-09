@@ -17,6 +17,8 @@ import {
   patchMeal,
   refineMealEstimate,
 } from '@/api/meals'
+import { normalizeMealImage } from '@/utils/mealImage'
+import axios from 'axios'
 
 const props = defineProps<{
   date: string
@@ -118,6 +120,17 @@ function applyEstimate(est: {
   estimateFailed.value = Boolean(est.estimate_failed)
 }
 
+function estimateErrorMessage(err: unknown): string {
+  if (axios.isAxiosError(err)) {
+    const detail = err.response?.data?.detail
+    if (typeof detail === 'string' && detail.trim()) return detail
+    if (err.code === 'ECONNABORTED') return '估卡超时，请换更小的照片或稍后再试'
+    if (!err.response) return '连不上服务器，请确认手机和电脑在同一网络'
+  }
+  if (err instanceof Error && err.message) return err.message
+  return '上传或估卡失败'
+}
+
 async function onFileSelected(ev: Event) {
   const input = ev.target as HTMLInputElement
   const file = input.files?.[0]
@@ -127,14 +140,28 @@ async function onFileSelected(ev: Event) {
 
   resetCompose()
   pendingMealType.value = mealType
-  previewUrl.value = URL.createObjectURL(file)
   composeMode.value = 'ai'
   composeVisible.value = true
   analyzing.value = true
+  pushAi('正在处理照片…')
+
+  let uploadFile: File
+  try {
+    uploadFile = await normalizeMealImage(file)
+  } catch (err) {
+    analyzing.value = false
+    estimateFailed.value = true
+    const msg = estimateErrorMessage(err)
+    pushAi(`${msg}。你可以手填热量，或换一张 JPG/PNG 再试。`)
+    showFailToast(msg)
+    return
+  }
+
+  previewUrl.value = URL.createObjectURL(uploadFile)
   pushAi('正在看这顿饭…识别食材与份量中')
 
   try {
-    const est = await estimateMeal(file)
+    const est = await estimateMeal(uploadFile)
     imagePath.value = est.image_path
     applyEstimate(est)
     analyzing.value = false
@@ -150,11 +177,12 @@ async function onFileSelected(ev: Event) {
           `如果份量不对、还有饮料/酱料，直接跟我说，我帮你改到更准。确认好后点下方保存。`,
       )
     }
-  } catch {
+  } catch (err) {
     analyzing.value = false
     estimateFailed.value = true
-    pushAi('网络或模型出了点问题。你可以手填热量，或稍后再试。')
-    showFailToast('上传或估卡失败')
+    const msg = estimateErrorMessage(err)
+    pushAi(`${msg}。你可以手填热量，或稍后再试。`)
+    showFailToast(msg)
   }
 }
 

@@ -1,26 +1,32 @@
-/* Fitness Kit inspired — clean mobile health dashboard */
+/* Shared tokens — overridden by persona themes */
 :root {
-  --bg: #eef3f0;
-  --bg-spot: #d8f3e7;
+  --bg: #f3f1ef;
+  --bg-spot: #e8e2dc;
   --card: #ffffff;
-  --ink: #0f1a14;
-  --muted: #66736c;
-  --line: #e6ece8;
-  --primary: #12b886;
-  --primary-dark: #0a9b70;
-  --primary-soft: #d3f9e8;
-  --water: #339af0;
-  --water-soft: #d0ebff;
-  --cal: #ff6b6b;
-  --cal-soft: #ffe3e3;
-  --workout: #fab005;
-  --workout-soft: #fff3bf;
-  --shadow: 0 10px 30px rgba(15, 26, 20, 0.06);
-  --shadow-sm: 0 4px 14px rgba(15, 26, 20, 0.05);
-  --radius: 24px;
-  --radius-sm: 16px;
-  --font-display: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --ink: #1a1714;
+  --muted: #7a736c;
+  --line: #ebe6e1;
+  --primary: #c45c7a;
+  --primary-dark: #a34460;
+  --primary-soft: #f8e4ea;
+  --accent: #c45c7a;
+  --water: #5b8def;
+  --water-soft: #e4edff;
+  --cal: #e07060;
+  --cal-soft: #fde8e4;
+  --workout: #d4a017;
+  --workout-soft: #fff1cc;
+  --shadow: 0 12px 36px rgba(26, 23, 20, 0.07);
+  --shadow-sm: 0 4px 16px rgba(26, 23, 20, 0.05);
+  --radius: 22px;
+  --radius-sm: 14px;
+  --font-display: 'Sora', 'Noto Sans SC', sans-serif;
   --font-ui: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --hero-glow: rgba(196, 92, 122, 0.18);
+  --surface-elevated: rgba(255, 255, 255, 0.72);
+  --on-primary: #ffffff;
+  --tabbar-bg: rgba(255, 255, 255, 0.92);
+  --grain: rgba(26, 23, 20, 0.03);
 
   --van-primary-color: var(--primary);
   --van-success-color: var(--primary);
@@ -39,6 +45,60 @@
   --van-border-color: var(--line);
 }
 
+/* 孙孙 · 粉色主调 */
+html[data-persona='leaf'] {
+  --bg: #faf2f5;
+  --bg-spot: #f5d6e0;
+  --card: #fffafb;
+  --ink: #2a1820;
+  --muted: #9a7382;
+  --line: #f0dde4;
+  --primary: #e85d8e;
+  --primary-dark: #c94474;
+  --primary-soft: #fce4ee;
+  --accent: #ff8fb5;
+  --water: #7aa7f5;
+  --water-soft: #e8f0ff;
+  --cal: #f07868;
+  --cal-soft: #ffe8e4;
+  --workout: #e8a838;
+  --workout-soft: #fff3d6;
+  --shadow: 0 14px 40px rgba(200, 80, 120, 0.1);
+  --shadow-sm: 0 4px 16px rgba(200, 80, 120, 0.07);
+  --hero-glow: rgba(232, 93, 142, 0.28);
+  --surface-elevated: rgba(255, 250, 251, 0.8);
+  --tabbar-bg: rgba(255, 250, 251, 0.94);
+  --grain: rgba(232, 93, 142, 0.04);
+}
+
+/* 龙龙 · 暗黑主调 */
+html[data-persona='dragon'] {
+  --bg: #0e0f12;
+  --bg-spot: #1c1a18;
+  --card: #181a1f;
+  --ink: #f3efe8;
+  --muted: #9a948a;
+  --line: #2a2c33;
+  --primary: #e8c48a;
+  --primary-dark: #d4ae6e;
+  --primary-soft: #2a2418;
+  --accent: #f0d4a8;
+  --water: #6b9fff;
+  --water-soft: #1a2438;
+  --cal: #ff8a7a;
+  --cal-soft: #2a1816;
+  --workout: #f0c14a;
+  --workout-soft: #2a2410;
+  --shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+  --shadow-sm: 0 4px 18px rgba(0, 0, 0, 0.35);
+  --hero-glow: rgba(232, 196, 138, 0.16);
+  --surface-elevated: rgba(24, 26, 31, 0.88);
+  --on-primary: #1a140c;
+  --tabbar-bg: rgba(14, 15, 18, 0.94);
+  --grain: rgba(255, 255, 255, 0.03);
+  color-scheme: dark;
+}
+
 *,
 *::before,
 *::after {
@@ -54,14 +114,26 @@ body,
   font-family: var(--font-ui);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
+  transition: background 0.35s ease, color 0.35s ease;
 }
 
 body {
   background:
-    radial-gradient(90% 60% at 100% -10%, var(--bg-spot), transparent 55%),
-    radial-gradient(70% 50% at 0% 20%, rgba(51, 154, 240, 0.12), transparent 50%),
+    radial-gradient(80% 55% at 100% -8%, var(--hero-glow), transparent 55%),
+    radial-gradient(60% 40% at 0% 15%, var(--bg-spot), transparent 50%),
     var(--bg);
   background-attachment: fixed;
+}
+
+body::before {
+  content: '';
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  opacity: 0.45;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.45'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
 }
 
 h1,
@@ -69,14 +141,14 @@ h2,
 h3,
 .fit-display {
   font-family: var(--font-display);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 .fit-card {
   background: var(--card);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  border: 1px solid rgba(255, 255, 255, 0.7);
+  border: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
 }
 
 .fit-card-pad {
@@ -85,11 +157,12 @@ h3,
 
 .fit-section-label {
   margin: 0 0 12px;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.14em;
   color: var(--muted);
+  font-family: var(--font-display);
 }
 
 .van-nav-bar {
@@ -100,13 +173,22 @@ h3,
   font-family: var(--font-display) !important;
   font-weight: 700 !important;
   font-size: 18px !important;
+  color: var(--ink) !important;
 }
 
 .van-tabbar {
-  background: rgba(255, 255, 255, 0.92) !important;
+  background: var(--tabbar-bg) !important;
   backdrop-filter: blur(18px);
   border-top: 1px solid var(--line);
-  box-shadow: 0 -8px 24px rgba(15, 26, 20, 0.04);
+  box-shadow: 0 -8px 24px color-mix(in srgb, var(--ink) 6%, transparent);
+}
+
+.van-tabbar-item {
+  color: var(--muted) !important;
+}
+
+.van-tabbar-item--active {
+  color: var(--primary) !important;
 }
 
 .van-tabbar-item__text {
@@ -127,4 +209,8 @@ h3,
 .van-hairline--top-bottom::after,
 .van-hairline-unset--top-bottom::after {
   border-color: var(--line) !important;
+}
+
+.van-empty__description {
+  color: var(--muted) !important;
 }

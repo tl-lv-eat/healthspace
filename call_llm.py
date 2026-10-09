@@ -124,7 +124,7 @@ def _llm_settings(cfg: dict) -> dict:
         "model": llm.get("model", DEFAULT_MODEL),
         "temperature": llm.get("temperature", 0),
         "timeout": llm.get("timeout", 120),
-        "enable_thinking": llm.get("enable_thinking", True),
+        "enable_thinking": bool(llm.get("enable_thinking", False)),
         "top_p": None,
         "top_k": None,
         "presence_penalty": None,
@@ -143,7 +143,7 @@ def _chat_extra_body(
     *,
     enable_thinking: bool = False,
 ) -> dict[str, Any]:
-    """组装 extra_body；enable_thinking 由调用方显式传入（默认关）。"""
+    """组装 extra_body；默认关闭思考。关思考时不传 enable_thinking，避免网关误开。"""
     extra = dict(kwargs.pop("extra_body", {}) or {})
     if _strict_openai_body():
         # 只保留调用方显式传入的其它键；去掉 vLLM/Qwen 扩展字段
@@ -158,7 +158,19 @@ def _chat_extra_body(
         extra["chat_template_kwargs"] = ctk
         if settings.get("top_k") is not None and "top_k" not in extra:
             extra["top_k"] = settings["top_k"]
-    extra["enable_thinking"] = enable
+        extra["enable_thinking"] = enable
+        return extra
+    # maas：仅在显式开启时写入；关闭则剔除，保持兼容模式干净
+    if enable:
+        extra["enable_thinking"] = True
+    else:
+        extra.pop("enable_thinking", None)
+        ctk = dict(extra.get("chat_template_kwargs") or {})
+        ctk.pop("enable_thinking", None)
+        if ctk:
+            extra["chat_template_kwargs"] = ctk
+        else:
+            extra.pop("chat_template_kwargs", None)
     return extra
 
 

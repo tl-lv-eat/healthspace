@@ -75,7 +75,7 @@ def generate_weekly_report(
     ]
 
     try:
-        result = call_llm.responses_chat_messages(messages, stream=False)
+        result = call_llm.responses_chat_messages(messages, enable_thinking=False)
         content = (result.text or "").strip()
     except Exception as exc:
         raise ReportError(str(exc)) from exc

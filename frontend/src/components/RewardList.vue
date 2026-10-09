@@ -38,7 +38,7 @@ async function onReveal(r: Reward) {
 function descriptionFor(r: Reward): string {
   if (revealed.value[r.id]) return revealed.value[r.id]
   if (props.mode === 'mine' || !r.is_private) return r.description ?? ''
-  if (r.is_private) return '（私密 · 点击查看说明）'
+  if (r.is_private) return '私密奖励 · 点查看可解锁说明'
   return r.description ?? ''
 }
 
@@ -108,106 +108,239 @@ async function onArchive(r: Reward) {
 </script>
 
 <template>
-  <van-cell-group v-for="r in rewards" :key="r.id" inset class="reward-item">
-    <van-cell
-      :title="r.title"
-      :label="descriptionFor(r)"
-    >
-      <template #icon>
-        <van-icon v-if="r.is_private" name="lock" class="reward-item__lock" />
-      </template>
-      <template #value>
-        <div class="reward-item__meta">
-          <span v-if="mode !== 'mall'" class="reward-item__tag">{{ statusLabel(r.status) }}</span>
-          <span class="reward-item__price">{{ r.points_price }} 分</span>
+  <div class="rl">
+    <article v-for="r in rewards" :key="r.id" class="rl-card" :class="`rl-card--${r.category}`">
+      <header class="rl-card__top">
+        <div class="rl-card__titles">
+          <span class="rl-card__cat">{{ rewardCategoryLabel(r.category) }}</span>
+          <h3>
+            <van-icon v-if="r.is_private" name="lock" class="rl-card__lock" />
+            {{ r.title }}
+          </h3>
+          <p>{{ descriptionFor(r) || '暂无说明' }}</p>
         </div>
-      </template>
-    </van-cell>
-    <van-cell
-      v-if="mode === 'mall'"
-      :title="rewardCategoryLabel(r.category)"
-      title-class="reward-item__cat"
-    />
-    <van-cell v-if="r.reject_reason && mode === 'mine'" title="打回原因" :label="r.reject_reason" />
-    <van-cell>
-      <div class="reward-item__actions">
-        <van-button
+        <div class="rl-card__price">
+          <strong>{{ r.points_price }}</strong>
+          <span>分</span>
+        </div>
+      </header>
+
+      <p v-if="mode !== 'mall'" class="rl-card__status">{{ statusLabel(r.status) }}</p>
+      <p v-if="r.reject_reason && mode === 'mine'" class="rl-card__reject">打回：{{ r.reject_reason }}</p>
+
+      <footer class="rl-card__actions">
+        <button
           v-if="mode === 'mall' && r.is_private && !revealed[r.id]"
-          size="small"
-          plain
+          type="button"
+          class="rl-btn"
           @click="onReveal(r)"
         >
           查看
-        </van-button>
-        <van-button
+        </button>
+        <button
           v-if="mode === 'mall'"
-          size="small"
-          type="primary"
+          type="button"
+          class="rl-btn rl-btn--primary"
           :disabled="(balance ?? 0) < r.points_price"
           @click="onRedeem(r)"
         >
           兑换
-        </van-button>
+        </button>
         <template v-if="mode === 'review'">
-          <van-button size="small" type="primary" plain @click="onApprove(r)">通过</van-button>
-          <van-button size="small" type="danger" plain @click="onReject(r)">打回</van-button>
+          <button type="button" class="rl-btn rl-btn--primary" @click="onApprove(r)">通过</button>
+          <button type="button" class="rl-btn rl-btn--danger" @click="onReject(r)">打回</button>
         </template>
         <template v-if="mode === 'mine'">
-          <van-button
+          <button
             v-if="r.status === 'rejected' || r.status === 'pending_review'"
-            size="small"
-            plain
+            type="button"
+            class="rl-btn"
             @click="emit('edit', r)"
           >
             编辑
-          </van-button>
-          <van-button v-if="r.status === 'rejected'" size="small" type="primary" plain @click="onResubmit(r)">
+          </button>
+          <button
+            v-if="r.status === 'rejected'"
+            type="button"
+            class="rl-btn rl-btn--primary"
+            @click="onResubmit(r)"
+          >
             重新提交
-          </van-button>
-          <van-button v-if="r.status === 'listed'" size="small" plain @click="onArchive(r)">下架</van-button>
+          </button>
+          <button v-if="r.status === 'listed'" type="button" class="rl-btn" @click="onArchive(r)">
+            下架
+          </button>
         </template>
-      </div>
-    </van-cell>
-  </van-cell-group>
-  <van-empty v-if="!rewards.length" :description="mode === 'review' ? '暂无待审核' : '暂无奖励'" />
+      </footer>
+    </article>
+
+    <p v-if="!rewards.length" class="rl-empty">
+      {{ mode === 'review' ? '暂无待审核' : mode === 'mine' ? '暂无提案' : '该分类暂无奖励' }}
+    </p>
+  </div>
 </template>
 
 <style scoped>
-.reward-item {
-  margin-bottom: 12px;
-}
-
-.reward-item__lock {
-  margin-right: 6px;
-  color: var(--van-orange);
-}
-
-.reward-item__meta {
+.rl {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  gap: 10px;
+}
+
+.rl-card {
+  padding: 14px 14px 12px;
+  border-radius: 18px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.rl-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--primary);
+}
+
+.rl-card--food::before {
+  background: var(--cal);
+}
+.rl-card--fun::before {
+  background: var(--workout);
+}
+.rl-card--intimacy::before {
+  background: var(--primary);
+}
+.rl-card--adult::before {
+  background: color-mix(in srgb, var(--ink) 55%, var(--primary));
+}
+
+.rl-card__top {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.rl-card__titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.rl-card__cat {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+  font-family: var(--font-display);
+}
+
+.rl-card h3 {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
   gap: 4px;
 }
 
-.reward-item__tag {
-  font-size: 11px;
-  opacity: 0.65;
+.rl-card__lock {
+  color: var(--workout);
 }
 
-.reward-item__price {
-  font-weight: 600;
-  color: var(--van-primary-color);
-}
-
-.reward-item__cat {
+.rl-card p {
+  margin: 6px 0 0;
   font-size: 12px;
-  opacity: 0.7;
+  line-height: 1.45;
+  color: var(--muted);
+  font-weight: 600;
 }
 
-.reward-item__actions {
+.rl-card__price {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.rl-card__price strong {
+  display: block;
+  font-size: 1.35rem;
+  font-weight: 800;
+  font-family: var(--font-display);
+  color: var(--primary-dark);
+  line-height: 1;
+}
+
+.rl-card__price span {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.rl-card__status {
+  margin-top: 8px !important;
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 12%, var(--card));
+  color: var(--primary-dark) !important;
+  font-size: 11px !important;
+}
+
+.rl-card__reject {
+  color: var(--cal) !important;
+}
+
+.rl-card__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.rl-btn {
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 7px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.rl-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.rl-btn--primary {
+  background: var(--primary);
+  border-color: transparent;
+  color: var(--on-primary, #fff);
+}
+
+.rl-btn--danger {
+  border-color: color-mix(in srgb, var(--cal) 40%, var(--line));
+  color: var(--cal);
+  background: color-mix(in srgb, var(--cal) 10%, var(--card));
+}
+
+.rl-empty {
+  margin: 0;
+  padding: 22px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  border: 1px dashed var(--line);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--card) 65%, transparent);
 }
 </style>

@@ -16,14 +16,6 @@
     "instructions_zh": "哑铃下放至胸侧，推起时勿碰撞。"
   },
   {
-    "slug": "incline-dumbbell-press",
-    "name_zh": "上斜哑铃卧推",
-    "name_en": "Incline Dumbbell Press",
-    "body_part": "chest",
-    "muscle": "pectorals",
-    "instructions_zh": "上斜凳约30–45°，侧重上胸。"
-  },
-  {
     "slug": "dumbbell-fly",
     "name_zh": "哑铃飞鸟",
     "name_en": "Dumbbell Fly",
@@ -32,9 +24,9 @@
     "instructions_zh": "肘微屈，弧形合拢，感受胸肌拉伸。"
   },
   {
-    "slug": "cable-crossover",
-    "name_zh": "龙门架夹胸",
-    "name_en": "Cable Crossover",
+    "slug": "cable-cross-over-variation",
+    "name_zh": "绳索夹胸",
+    "name_en": "Cable Cross Over Variation",
     "body_part": "chest",
     "muscle": "pectorals",
     "instructions_zh": "身体略前倾，双手在胸前交汇。"
@@ -64,65 +56,57 @@
     "instructions_zh": "窄握反握，侧重背阔与肱二头。"
   },
   {
-    "slug": "lat-pulldown",
+    "slug": "cable-lat-pulldown-full-range-of-motion",
     "name_zh": "高位下拉",
-    "name_en": "Lat Pulldown",
+    "name_en": "Cable Lat Pulldown Full Range Of Motion",
     "body_part": "back",
     "muscle": "lats",
     "instructions_zh": "挺胸沉肩，将横杠拉至锁骨附近。"
-  },
-  {
-    "slug": "alternate-lateral-pulldown",
-    "name_zh": "交替宽握下拉",
-    "name_en": "Alternate Lateral Pulldown",
-    "body_part": "back",
-    "muscle": "lats",
-    "instructions_zh": "交替下拉，保持核心稳定。"
   },
   {
     "slug": "barbell-bent-over-row",
     "name_zh": "杠铃俯身划船",
     "name_en": "Barbell Bent Over Row",
     "body_part": "back",
-    "muscle": "lats",
+    "muscle": "upper-back",
     "instructions_zh": "髋铰链俯身，将杠铃拉向腹部。"
   },
   {
-    "slug": "dumbbell-single-arm-row",
+    "slug": "dumbbell-one-arm-bent-over-row",
     "name_zh": "单臂哑铃划船",
-    "name_en": "Dumbbell Single Arm Row",
+    "name_en": "Dumbbell One Arm Bent Over Row",
     "body_part": "back",
-    "muscle": "lats",
+    "muscle": "upper-back",
     "instructions_zh": "一手扶凳，将哑铃拉向髋部。"
   },
   {
-    "slug": "seated-cable-row",
+    "slug": "cable-seated-row",
     "name_zh": "坐姿划船",
-    "name_en": "Seated Cable Row",
+    "name_en": "Cable Seated Row",
     "body_part": "back",
-    "muscle": "lats",
+    "muscle": "upper-back",
     "instructions_zh": "坐直后拉，肩胛后缩夹紧。"
   },
   {
-    "slug": "overhead-press",
-    "name_zh": "站姿推举",
-    "name_en": "Overhead Press",
-    "body_part": "shoulders",
-    "muscle": "delts",
-    "instructions_zh": "杠铃从锁骨推至头顶，核心收紧。"
-  },
-  {
-    "slug": "dumbbell-shoulder-press",
+    "slug": "dumbbell-seated-shoulder-press",
     "name_zh": "哑铃肩推",
-    "name_en": "Dumbbell Shoulder Press",
+    "name_en": "Dumbbell Seated Shoulder Press",
     "body_part": "shoulders",
     "muscle": "delts",
-    "instructions_zh": "哑铃推至手臂接近伸直，勿耸肩。"
+    "instructions_zh": "坐姿哑铃推至手臂接近伸直，勿耸肩。"
   },
   {
-    "slug": "lateral-raise",
-    "name_zh": "侧平举",
-    "name_en": "Lateral Raise",
+    "slug": "dumbbell-standing-overhead-press",
+    "name_zh": "站姿哑铃推举",
+    "name_en": "Dumbbell Standing Overhead Press",
+    "body_part": "shoulders",
+    "muscle": "delts",
+    "instructions_zh": "核心收紧，哑铃从头侧推起。"
+  },
+  {
+    "slug": "dumbbell-lateral-raise",
+    "name_zh": "哑铃侧平举",
+    "name_en": "Dumbbell Lateral Raise",
     "body_part": "shoulders",
     "muscle": "delts",
     "instructions_zh": "肘微屈，抬至肩高，缓慢下放。"
@@ -140,7 +124,7 @@
     "name_zh": "杠铃深蹲",
     "name_en": "Barbell Full Squat",
     "body_part": "legs",
-    "muscle": "quads",
+    "muscle": "glutes",
     "instructions_zh": "杠铃置于斜方肌，蹲至大腿至少平行。"
   },
   {
@@ -148,15 +132,15 @@
     "name_zh": "杠铃前蹲",
     "name_en": "Barbell Front Squat",
     "body_part": "legs",
-    "muscle": "quads",
+    "muscle": "glutes",
     "instructions_zh": "杠铃架于前肩，躯干更直立。"
   },
   {
-    "slug": "leg-press",
+    "slug": "sled-45-leg-press",
     "name_zh": "腿举",
-    "name_en": "Leg Press",
+    "name_en": "Sled 45 Leg Press",
     "body_part": "legs",
-    "muscle": "quads",
+    "muscle": "glutes",
     "instructions_zh": "脚位适中，膝与脚尖方向一致。"
   },
   {
@@ -164,7 +148,7 @@
     "name_zh": "哑铃弓步",
     "name_en": "Dumbbell Lunge",
     "body_part": "legs",
-    "muscle": "quads",
+    "muscle": "glutes",
     "instructions_zh": "步幅适中，后膝接近触地。"
   },
   {
@@ -172,24 +156,24 @@
     "name_zh": "杠铃硬拉",
     "name_en": "Barbell Deadlift",
     "body_part": "legs",
-    "muscle": "hamstrings",
+    "muscle": "glutes",
     "instructions_zh": "髋铰链起杠，背中立，杠贴近小腿。"
   },
   {
-    "slug": "romanian-deadlift",
+    "slug": "barbell-romanian-deadlift",
     "name_zh": "罗马尼亚硬拉",
-    "name_en": "Romanian Deadlift",
+    "name_en": "Barbell Romanian Deadlift",
     "body_part": "legs",
-    "muscle": "hamstrings",
+    "muscle": "glutes",
     "instructions_zh": "膝微屈，髋向后推，感受腘绳肌拉伸。"
   },
   {
-    "slug": "hip-thrust",
-    "name_zh": "臀推",
-    "name_en": "Hip Thrust",
+    "slug": "barbell-glute-bridge",
+    "name_zh": "杠铃臀桥",
+    "name_en": "Barbell Glute Bridge",
     "body_part": "legs",
     "muscle": "glutes",
-    "instructions_zh": "上背靠凳，顶髋至身体成直线。"
+    "instructions_zh": "上背靠凳或仰卧，顶髋至身体成直线。"
   },
   {
     "slug": "barbell-curl",
@@ -208,17 +192,17 @@
     "instructions_zh": "中性握距，侧重肱肌与前臂。"
   },
   {
-    "slug": "triceps-pushdown",
+    "slug": "cable-pushdown",
     "name_zh": "绳索下压",
-    "name_en": "Triceps Pushdown",
+    "name_en": "Cable Pushdown",
     "body_part": "arms",
     "muscle": "triceps",
     "instructions_zh": "大臂固定，将绳索压至完全伸直。"
   },
   {
-    "slug": "crunch",
+    "slug": "crunch-floor",
     "name_zh": "卷腹",
-    "name_en": "Crunch",
+    "name_en": "Crunch Floor",
     "body_part": "core",
     "muscle": "abs",
     "instructions_zh": "下背贴地，上背离地，勿拉颈。"
@@ -232,11 +216,243 @@
     "instructions_zh": "悬挂抬腿至水平或更高，避免摆动。"
   },
   {
-    "slug": "plank",
+    "slug": "power-point-plank",
     "name_zh": "平板支撑",
-    "name_en": "Plank",
+    "name_en": "Power Point Plank",
     "body_part": "core",
     "muscle": "abs",
     "instructions_zh": "肘在肩下，身体成一直线，收紧核心。"
+  },
+  {
+    "slug": "push-up",
+    "name_zh": "标准俯卧撑",
+    "name_en": "Push Up",
+    "body_part": "bodyweight",
+    "muscle": "pectorals",
+    "instructions_zh": "身体成直线，胸部接近地面后推起。"
+  },
+  {
+    "slug": "wide-hand-push-up",
+    "name_zh": "宽距俯卧撑",
+    "name_en": "Wide Hand Push Up",
+    "body_part": "bodyweight",
+    "muscle": "pectorals",
+    "instructions_zh": "双手略宽于肩，更侧重胸部。"
+  },
+  {
+    "slug": "diamond-push-up",
+    "name_zh": "钻石俯卧撑",
+    "name_en": "Diamond Push Up",
+    "body_part": "bodyweight",
+    "muscle": "triceps",
+    "instructions_zh": "双手呈菱形，侧重肱三头。"
+  },
+  {
+    "slug": "kneeling-push-up-male",
+    "name_zh": "跪姿俯卧撑",
+    "name_en": "Kneeling Push Up Male",
+    "body_part": "bodyweight",
+    "muscle": "pectorals",
+    "instructions_zh": "膝盖着地降低难度，保持核心。"
+  },
+  {
+    "slug": "decline-push-up",
+    "name_zh": "下斜俯卧撑",
+    "name_en": "Decline Push Up",
+    "body_part": "bodyweight",
+    "muscle": "pectorals",
+    "instructions_zh": "脚垫高，难度上升。"
+  },
+  {
+    "slug": "burpee",
+    "name_zh": "波比跳",
+    "name_en": "Burpee",
+    "body_part": "bodyweight",
+    "muscle": "cardio",
+    "instructions_zh": "深蹲撑地、后踢、俯卧撑、跳起连贯完成。"
+  },
+  {
+    "slug": "mountain-climber",
+    "name_zh": "登山跑",
+    "name_en": "Mountain Climber",
+    "body_part": "bodyweight",
+    "muscle": "cardio",
+    "instructions_zh": "高平板姿势，交替快速收膝。"
+  },
+  {
+    "slug": "jump-squat",
+    "name_zh": "跳蹲",
+    "name_en": "Jump Squat",
+    "body_part": "bodyweight",
+    "muscle": "glutes",
+    "instructions_zh": "蹲下后爆发跳起，落地缓冲。"
+  },
+  {
+    "slug": "forward-lunge-male",
+    "name_zh": "弓步蹲",
+    "name_en": "Forward Lunge Male",
+    "body_part": "bodyweight",
+    "muscle": "glutes",
+    "instructions_zh": "向前迈步下蹲，后膝接近触地。"
+  },
+  {
+    "slug": "walking-lunge",
+    "name_zh": "行走弓步",
+    "name_en": "Walking Lunge",
+    "body_part": "bodyweight",
+    "muscle": "glutes",
+    "instructions_zh": "连续向前弓步，保持躯干稳定。"
+  },
+  {
+    "slug": "low-glute-bridge-on-floor",
+    "name_zh": "臀桥",
+    "name_en": "Low Glute Bridge On Floor",
+    "body_part": "bodyweight",
+    "muscle": "glutes",
+    "instructions_zh": "仰卧顶髋，顶峰夹紧臀部。"
+  },
+  {
+    "slug": "inchworm",
+    "name_zh": "毛毛虫爬",
+    "name_en": "Inchworm",
+    "body_part": "bodyweight",
+    "muscle": "abs",
+    "instructions_zh": "站立俯身手撑地爬出成平板再走回。"
+  },
+  {
+    "slug": "bear-crawl",
+    "name_zh": "熊爬",
+    "name_en": "Bear Crawl",
+    "body_part": "bodyweight",
+    "muscle": "cardio",
+    "instructions_zh": "四肢着地，膝离地交替爬行。"
+  },
+  {
+    "slug": "chest-dip",
+    "name_zh": "双杠臂屈伸",
+    "name_en": "Chest Dip",
+    "body_part": "bodyweight",
+    "muscle": "pectorals",
+    "instructions_zh": "双杠支撑下降再推起，肘略外展。"
+  },
+  {
+    "slug": "assisted-pull-up",
+    "name_zh": "辅助引体",
+    "name_en": "Assisted Pull Up",
+    "body_part": "bodyweight",
+    "muscle": "lats",
+    "instructions_zh": "弹力带或器械辅助完成引体。"
+  },
+  {
+    "slug": "3-4-sit-up",
+    "name_zh": "仰卧起坐",
+    "name_en": "3 4 Sit Up",
+    "body_part": "bodyweight",
+    "muscle": "abs",
+    "instructions_zh": "仰卧屈膝起身，控制下放。"
+  },
+  {
+    "slug": "cross-body-crunch",
+    "name_zh": "交叉卷腹",
+    "name_en": "Cross Body Crunch",
+    "body_part": "bodyweight",
+    "muscle": "abs",
+    "instructions_zh": "对侧肘膝靠近，锻炼斜腹。"
+  },
+  {
+    "slug": "kettlebell-swing",
+    "name_zh": "壶铃摆动",
+    "name_en": "Kettlebell Swing",
+    "body_part": "kettlebell",
+    "muscle": "glutes",
+    "instructions_zh": "髋铰链发力，壶铃摆至胸肩高度。"
+  },
+  {
+    "slug": "kettlebell-goblet-squat",
+    "name_zh": "壶铃高脚杯深蹲",
+    "name_en": "Kettlebell Goblet Squat",
+    "body_part": "kettlebell",
+    "muscle": "glutes",
+    "instructions_zh": "双手持壶铃于胸前深蹲。"
+  },
+  {
+    "slug": "kettlebell-front-squat",
+    "name_zh": "壶铃前蹲",
+    "name_en": "Kettlebell Front Squat",
+    "body_part": "kettlebell",
+    "muscle": "glutes",
+    "instructions_zh": "壶铃架于肩前完成深蹲。"
+  },
+  {
+    "slug": "kettlebell-turkish-get-up-squat-style",
+    "name_zh": "壶铃土耳其起立",
+    "name_en": "Kettlebell Turkish Get Up Squat Style",
+    "body_part": "kettlebell",
+    "muscle": "glutes",
+    "instructions_zh": "单手持壶铃按步骤从躺到站。"
+  },
+  {
+    "slug": "kettlebell-one-arm-snatch",
+    "name_zh": "壶铃单臂抓举",
+    "name_en": "Kettlebell One Arm Snatch",
+    "body_part": "kettlebell",
+    "muscle": "delts",
+    "instructions_zh": "单手从摆动翻至头顶锁定。"
+  },
+  {
+    "slug": "kettlebell-one-arm-clean-and-jerk",
+    "name_zh": "壶铃单臂挺举",
+    "name_en": "Kettlebell One Arm Clean And Jerk",
+    "body_part": "kettlebell",
+    "muscle": "delts",
+    "instructions_zh": "翻站后借力推至头顶。"
+  },
+  {
+    "slug": "kettlebell-thruster",
+    "name_zh": "壶铃推举深蹲",
+    "name_en": "Kettlebell Thruster",
+    "body_part": "kettlebell",
+    "muscle": "delts",
+    "instructions_zh": "深蹲接推举，连贯发力。"
+  },
+  {
+    "slug": "kettlebell-one-arm-row",
+    "name_zh": "壶铃单臂划船",
+    "name_en": "Kettlebell One Arm Row",
+    "body_part": "kettlebell",
+    "muscle": "upper-back",
+    "instructions_zh": "俯身单臂将壶铃拉向髋部。"
+  },
+  {
+    "slug": "kettlebell-alternating-row",
+    "name_zh": "壶铃交替划船",
+    "name_en": "Kettlebell Alternating Row",
+    "body_part": "kettlebell",
+    "muscle": "upper-back",
+    "instructions_zh": "俯身交替两侧划船。"
+  },
+  {
+    "slug": "kettlebell-sumo-high-pull",
+    "name_zh": "壶铃相扑高拉",
+    "name_en": "Kettlebell Sumo High Pull",
+    "body_part": "kettlebell",
+    "muscle": "traps",
+    "instructions_zh": "宽站距拉起壶铃至胸高。"
+  },
+  {
+    "slug": "kettlebell-windmill",
+    "name_zh": "壶铃风车",
+    "name_en": "Kettlebell Windmill",
+    "body_part": "kettlebell",
+    "muscle": "abs",
+    "instructions_zh": "一手举壶铃，俯身触地侧链拉伸。"
+  },
+  {
+    "slug": "kettlebell-one-arm-floor-press",
+    "name_zh": "壶铃地板卧推",
+    "name_en": "Kettlebell One Arm Floor Press",
+    "body_part": "kettlebell",
+    "muscle": "pectorals",
+    "instructions_zh": "仰卧于地，单臂推起壶铃。"
   }
 ]

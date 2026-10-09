@@ -16,7 +16,7 @@ const links = [
   {
     to: '/settings',
     title: '设置',
-    desc: '昵称 · 性别年龄 · 积分结算',
+    desc: '昵称 · 基础代谢 · 积分结算',
     tone: 'primary',
     mark: '设',
   },

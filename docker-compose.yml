@@ -1,0 +1,18 @@
+# Private couple app — run on the fixed host after pulling the image.
+# Override image name via IMAGE=... when needed.
+
+services:
+  jianfei:
+    image: ${IMAGE:-jianfei:latest}
+    container_name: jianfei
+    ports:
+      - "${PORT:-8000}:8000"
+    volumes:
+      # Persist DB / uploads outside the image; first start can copy from image seed
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+      - ./config.yaml:/app/config.yaml:ro
+    environment:
+      - TZ=Asia/Shanghai
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY:-}
+    restart: unless-stopped

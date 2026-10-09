@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import calendar as cal_mod
 import json
@@ -13,6 +13,7 @@ from backend.app.models import Meal, User, WaterEntry, Workout
 from backend.app.routers.today import _get_partner
 from backend.app.services.day_section import build_day_section
 from backend.app.routers.week_plans import get_week_plan_for_user, monday_of, plan_as_dict
+from backend.app.completion import meal_done
 from backend.app.services.energy import daily_energy_snapshot, user_bmr
 from backend.app.services.week_rules import day_status, effective_rules
 
@@ -32,11 +33,6 @@ def _couple_users(db: Session) -> tuple[User, User]:
 def _day_meals_dicts(user_id: str, day: str, db: Session) -> list[dict]:
     rows = db.query(Meal).filter(Meal.user_id == user_id, Meal.date == day).all()
     return [{"meal_type": m.meal_type, "user_kcal": int(m.user_kcal or 0)} for m in rows]
-
-
-def _day_intake_kcal(user_id: str, day: str, db: Session) -> int:
-    rows = db.query(Meal).filter(Meal.user_id == user_id, Meal.date == day).all()
-    return sum(int(m.user_kcal or 0) for m in rows)
 
 
 def _day_water_total(user_id: str, day: str, db: Session) -> int:
@@ -60,10 +56,15 @@ def _status_for_user(u: User, day: str, db: Session) -> dict:
     """Energy-linked day status for calendar colors."""
     plan = get_week_plan_for_user(u, day, db)
     rules = effective_rules(plan_as_dict(plan, u), u.default_water_ml)
-    intake = _day_intake_kcal(u.id, day, db)
+    meal_rows = _day_meals_dicts(u.id, day, db)
+    intake = sum(int(m.get("user_kcal") or 0) for m in meal_rows)
     water = _day_water_total(u.id, day, db)
     workouts = _day_workouts_dicts(u.id, day, db)
     bmr = user_bmr(u, db)
+    meals_complete = meal_done(
+        [{"meal_type": m["meal_type"]} for m in meal_rows],
+        rules["meal_rule"],
+    )
     snap = daily_energy_snapshot(
         intake_kcal=intake,
         workouts=workouts,
@@ -72,10 +73,11 @@ def _status_for_user(u: User, day: str, db: Session) -> dict:
         water_target_ml=rules["water_target_ml"],
         weekly_kcal_deficit=int(rules.get("weekly_kcal_deficit") or 3500),
         period_days=int(rules.get("period_days") or 7),
+        meals_complete=meals_complete,
     )
     # Keep legacy meal/workout completion for points hooks that still call old shape.
     legacy = day_status(
-        [{"meal_type": m["meal_type"]} for m in _day_meals_dicts(u.id, day, db)],
+        [{"meal_type": m["meal_type"]} for m in meal_rows],
         water,
         workouts,
         rules,

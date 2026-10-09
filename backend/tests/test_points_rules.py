@@ -7,17 +7,18 @@ def _settle(client, auth_header, day: str):
 
 
 def _low_deficit_meal(client, auth_header, day: str) -> None:
-    """Single modest meal so intake − burn − BMR ≤ 0 for default dragon profile."""
-    client.post(
-        "/api/meals",
-        headers=auth_header,
-        json={
-            "date": day,
-            "meal_type": "lunch",
-            "food_summary": "light",
-            "user_kcal": 500,
-        },
-    )
+    """Breakfast+lunch+dinner so meals are complete; total intake still under BMR."""
+    for meal_type, kcal in (("breakfast", 200), ("lunch", 200), ("dinner", 100)):
+        client.post(
+            "/api/meals",
+            headers=auth_header,
+            json={
+                "date": day,
+                "meal_type": meal_type,
+                "food_summary": "light",
+                "user_kcal": kcal,
+            },
+        )
 
 
 def test_daily_settle_water_only(client, auth_header):

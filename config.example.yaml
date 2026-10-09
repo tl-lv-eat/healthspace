@@ -5,6 +5,7 @@ llm:
   provider: maas
   model: qwen3.8-27b
   api_key: "your-api-key-here"
+  enable_thinking: false
 
 app:
   jwt_secret: change-me-in-production
@@ -25,11 +26,11 @@ app:
   users:
     - id: dragon
       password: dragon-pass
-      display_name: "🐉"
+      display_name: "龙龙"
       default_water_ml: 2000
       role: member
     - id: leaf
       password: leaf-pass
-      display_name: "🍃"
+      display_name: "孙孙"
       default_water_ml: 2000
       role: member

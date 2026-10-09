@@ -35,13 +35,22 @@ const mealKcal = computed(() =>
 const energy = computed(() => props.section.energy)
 
 const energySurplusTip = computed(() => {
-  const s = energy.value?.surplus_kcal ?? 0
+  const e = energy.value
+  if (!e) return '—'
+  if (e.empty) return '未记录'
+  if (!e.meals_complete) return '饮食未记齐'
+  const s = e.surplus_kcal ?? 0
   if (s > 0) return `盈余 +${s}`
   if (s < 0) return `缺口 ${Math.abs(s)}`
   return '持平 0'
 })
 
-const deficitContribKcal = computed(() => Math.max(0, -(energy.value?.surplus_kcal ?? 0)))
+const deficitContribKcal = computed(() => {
+  const e = energy.value
+  if (!e || e.empty || !e.meals_complete) return 0
+  if (typeof e.deficit_contrib === 'number') return Math.max(0, e.deficit_contrib)
+  return Math.max(0, -(e.surplus_kcal ?? 0))
+})
 
 const intakeOverCap = computed(() => {
   const e = energy.value
@@ -120,7 +129,13 @@ const persona = computed(() => personaById(props.section.user_id))
     <details v-if="energy" class="energy">
       <summary class="energy__sum">
         <span>能量账本</span>
-        <span class="energy__badge">{{ energySurplusTip }} kcal</span>
+        <span class="energy__badge">
+          {{
+            energy.empty || !energy.meals_complete
+              ? energySurplusTip
+              : `${energySurplusTip} kcal`
+          }}
+        </span>
       </summary>
       <div class="energy__body">
         <dl class="energy__grid">
@@ -141,7 +156,13 @@ const persona = computed(() => personaById(props.section.user_id))
             <dd>{{ energySurplusTip }}</dd>
           </div>
         </dl>
-        <p class="energy__eq">
+        <p v-if="energy.empty" class="energy__eq energy__soft">
+          今天还没记餐/水/运动，缺口贡献按 0 计（不算进计划进度）
+        </p>
+        <p v-else-if="!energy.meals_complete" class="energy__eq energy__soft">
+          早午晚记齐后才计算热量缺口；当前缺口贡献 0
+        </p>
+        <p v-else class="energy__eq">
           {{ energy.intake_kcal }} − {{ energy.burn_kcal }} − {{ energy.bmr }} =
           {{ energySurplusTip }} kcal
         </p>
@@ -153,7 +174,11 @@ const persona = computed(() => personaById(props.section.user_id))
             <strong>{{ deficitContribKcal }}</strong>
             kcal
             <span
-              v-if="energy.daily_deficit_target > 0 && deficitContribKcal < energy.daily_deficit_target"
+              v-if="
+                energy.meals_complete &&
+                energy.daily_deficit_target > 0 &&
+                deficitContribKcal < energy.daily_deficit_target
+              "
               class="energy__soft"
             >
               （还差 {{ energy.daily_deficit_target - deficitContribKcal }}）

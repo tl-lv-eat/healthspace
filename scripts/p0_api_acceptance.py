@@ -35,13 +35,13 @@ def main() -> None:
         c.post("/api/auth/login", json={"user_id": "dragon", "password": "dragon-pass"}).json()[
             "user"
         ]["display_name"]
-        == "🐉"
+        == "龙龙"
     )
     assert (
         c.post("/api/auth/login", json={"user_id": "leaf", "password": "leaf-pass"}).json()[
             "user"
         ]["display_name"]
-        == "🍃"
+        == "叶子"
     )
 
     day = "2026-10-08"

@@ -16,6 +16,7 @@ class ProfileUpdateRequest(BaseModel):
     display_name: str
     sex: str | None = None  # male|female
     age: int | None = None
+    bmr_kcal: int | None = None
 
 
 class UserOut(BaseModel):
@@ -25,6 +26,7 @@ class UserOut(BaseModel):
     role: str
     sex: str | None = None
     age: int | None = None
+    bmr_kcal: int | None = None
 
     model_config = {"from_attributes": True}
 

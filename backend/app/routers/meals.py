@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
@@ -8,9 +9,10 @@ from sqlalchemy.orm import Session
 from backend.app.auth import get_current_user
 from backend.app.db import get_db
 from backend.app.models import Meal, User
-from backend.app.schemas import MealCreate, MealEstimateOut, MealOut, MealPatch
+from backend.app.schemas import MealCreate, MealEstimateOut, MealOut, MealPatch, MealRefineIn
 from backend.app.services.uploads import meal_upload_root, save_meal_image
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 MEAL_TYPES = frozenset({"breakfast", "lunch", "dinner", "snack"})
@@ -41,7 +43,7 @@ def _meal_to_out(meal: Meal) -> MealOut:
 
 
 def _validate_meal_image_path(image_path: str | None, user_id: str) -> None:
-    if image_path is None:
+    if image_path is None or image_path == "":
         return
     prefix = f"{user_id}/"
     if ".." in image_path or image_path.startswith("/") or "\\" in image_path:
@@ -79,6 +81,18 @@ def estimate_meal(
             food_summary="",
             kcal=0,
             advice="",
+            reason="",
+            image_path=relative,
+            estimate_failed=True,
+        )
+    except Exception:
+        # Keep photo; let user hand-fill instead of opaque 500 / proxy errors.
+        logger.exception("meal estimate LLM failed")
+        return MealEstimateOut(
+            food_summary="",
+            kcal=0,
+            advice="",
+            reason="",
             image_path=relative,
             estimate_failed=True,
         )
@@ -86,7 +100,38 @@ def estimate_meal(
         food_summary=str(result["food_summary"]),
         kcal=int(result["kcal"]),
         advice=str(result.get("advice", "")),
+        reason=str(result.get("reason", "")),
         image_path=relative,
+    )
+
+
+@router.post("/estimate/refine", response_model=MealEstimateOut)
+def refine_meal_estimate(
+    body: MealRefineIn,
+    user: User = Depends(get_current_user),
+) -> MealEstimateOut:
+    from backend.app.services.meal_ai import MealAIError, refine_calories_estimate
+
+    _validate_meal_image_path(body.image_path, user.id)
+    image_full = meal_upload_root() / body.image_path if body.image_path else None
+    try:
+        result = refine_calories_estimate(
+            food_summary=body.food_summary,
+            kcal=body.kcal,
+            reason=body.reason,
+            advice=body.advice,
+            user_message=body.message,
+            image_path=image_full,
+        )
+    except MealAIError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+    return MealEstimateOut(
+        food_summary=str(result["food_summary"]),
+        kcal=int(result["kcal"]),
+        advice=str(result.get("advice", "")),
+        reason=str(result.get("reason", "")),
+        image_path=body.image_path or "",
+        estimate_failed=False,
     )
 
 
@@ -150,3 +195,18 @@ def patch_meal(
 
     after_daily_activity(db, user.id, meal.date)
     return _meal_to_out(meal)
+
+
+@router.delete("/{meal_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_meal(
+    meal_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> None:
+    meal = _get_owned_meal(meal_id, user, db)
+    day = meal.date
+    db.delete(meal)
+    db.commit()
+    from backend.app.services.points_hooks import after_daily_activity
+
+    after_daily_activity(db, user.id, day)

@@ -19,6 +19,7 @@ export interface MealEstimate {
   food_summary: string
   kcal: number
   advice: string
+  reason: string
   image_path: string
   estimate_failed?: boolean
 }
@@ -41,8 +42,22 @@ export async function fetchMeals(date: string): Promise<Meal[]> {
 export async function estimateMeal(file: File): Promise<MealEstimate> {
   const form = new FormData()
   form.append('file', file)
+  // Do not set Content-Type manually — browser/axios must add multipart boundary.
   const { data } = await http.post<MealEstimate>('/meals/estimate', form, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 120_000,
+  })
+  return data
+}
+
+export async function refineMealEstimate(payload: {
+  image_path?: string | null
+  food_summary: string
+  kcal: number
+  reason: string
+  advice: string
+  message: string
+}): Promise<MealEstimate> {
+  const { data } = await http.post<MealEstimate>('/meals/estimate/refine', payload, {
     timeout: 120_000,
   })
   return data
@@ -59,6 +74,10 @@ export async function patchMeal(
 ): Promise<Meal> {
   const { data } = await http.patch<Meal>(`/meals/${id}`, body)
   return data
+}
+
+export async function deleteMeal(id: number): Promise<void> {
+  await http.delete(`/meals/${id}`)
 }
 
 export const MEAL_TYPE_LABELS: Record<MealType, string> = {
